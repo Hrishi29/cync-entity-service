@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EntityRelationshipTreeServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.service.impl</a> &gt; <span class="el_source">EntityRelationshipTreeServiceImpl.java</span></div><h1>EntityRelationshipTreeServiceImpl.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.service.impl;
+
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.ENTITY_NOT_FOUND;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.ENTITY_RELATION_EXIST;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Service;
+
+import com.idexcel.cync.los.entity.common.constants.LOSEntityConstants;
+import com.idexcel.cync.los.entity.common.utils.CommonUtils;
+import com.idexcel.cync.los.entity.dao.FinancialRepository;
+import com.idexcel.cync.los.entity.exception.BadRequestException;
+import com.idexcel.cync.los.entity.exception.ResourceNotFoundException;
+import com.idexcel.cync.los.entity.model.ChildEntityNode;
+import com.idexcel.cync.los.entity.model.EntityNode;
+import com.idexcel.cync.los.entity.model.FinancialEntity;
+import com.idexcel.cync.los.entity.model.ParentEntityNode;
+
+@Service
+public class EntityRelationshipTreeServiceImpl {
+
+	private final FinancialRepository financialRepository;
+	private final MessageSource errorMsgs;
+
+	@Autowired
+<span class="fc" id="L31">	public EntityRelationshipTreeServiceImpl(FinancialRepository financialRepository, MessageSource errorMsgs) {</span>
+<span class="fc" id="L32">		this.financialRepository = financialRepository;</span>
+<span class="fc" id="L33">		this.errorMsgs = errorMsgs;</span>
+<span class="fc" id="L34">	}</span>
+
+	public EntityNode createTree(List&lt;EntityNode&gt; nodes, String entityId1) {// NOSONAR
+<span class="nc" id="L37">		EntityNode entityNode = new EntityNode(LOSEntityConstants.ROOT_NODE, entityId1, null, findByEntityId(entityId1),</span>
+				null);
+<span class="nc" id="L39">		nodes.add(entityNode);</span>
+<span class="nc" id="L40">		Map&lt;String, EntityNode&gt; mapTmp = new HashMap&lt;&gt;();</span>
+		// Save all nodes to a map
+<span class="nc bnc" id="L42" title="All 2 branches missed.">		for (EntityNode current : nodes) {</span>
+<span class="nc" id="L43">			mapTmp.put(current.getChildId(), current);</span>
+<span class="nc" id="L44">		}</span>
+		// loop and assign parent/child relationships
+<span class="nc bnc" id="L46" title="All 2 branches missed.">		for (EntityNode current : nodes) {</span>
+<span class="nc" id="L47">			String parentId = current.getParentId();</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">			if (parentId != null) {</span>
+<span class="nc" id="L49">				EntityNode parent = mapTmp.computeIfAbsent(parentId, k -&gt; mapTmp.get(parentId));</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">				if (parent != null) {</span>
+<span class="nc" id="L51">					current.setParent(parent);</span>
+<span class="nc" id="L52">					parent.addChild(current);</span>
+<span class="nc" id="L53">					mapTmp.put(parentId, parent);</span>
+<span class="nc" id="L54">					mapTmp.put(current.getChildId(), current);</span>
+				}
+			}
+<span class="nc" id="L57">		}</span>
+		// get the root
+<span class="nc" id="L59">		EntityNode root = null;</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		for (EntityNode node : mapTmp.values()) {</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">			if (node.getParent() == null) {</span>
+<span class="nc" id="L62">				root = node;</span>
+<span class="nc" id="L63">				break;</span>
+			}
+<span class="nc" id="L65">		}</span>
+<span class="nc" id="L66">		return root;</span>
+	}
+
+	public ParentEntityNode createTreeFromParent(List&lt;ParentEntityNode&gt; nodes, String entityId1) {// NOSONAR
+<span class="fc" id="L70">		ParentEntityNode entityNode = new ParentEntityNode(LOSEntityConstants.ROOT_NODE, entityId1, null,</span>
+<span class="nc" id="L71">				findByEntityId(entityId1), null);</span>
+<span class="nc" id="L72">		nodes.add(entityNode);</span>
+<span class="nc" id="L73">		HashMap&lt;String, ParentEntityNode&gt; mapTmp = new HashMap&lt;&gt;();</span>
+		// Save all nodes to a map
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		for (ParentEntityNode current : nodes) {</span>
+<span class="nc" id="L76">			mapTmp.put(current.getChildId(), current);</span>
+<span class="nc" id="L77">		}</span>
+		// loop and assign parent/child relationships
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		for (ParentEntityNode current : nodes) {</span>
+<span class="nc" id="L80">			String parentId = current.getParentId();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">			if (parentId != null) {</span>
+<span class="nc" id="L82">				ParentEntityNode parent = mapTmp.computeIfAbsent(parentId, k -&gt; mapTmp.get(parentId));</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">				if (parent != null) {</span>
+<span class="nc" id="L84">					current.setParent(parent);</span>
+<span class="nc" id="L85">					parent.addChild(current);</span>
+<span class="nc" id="L86">					mapTmp.put(parentId, parent);</span>
+<span class="nc" id="L87">					mapTmp.put(current.getChildId(), current);</span>
+				}
+			}
+<span class="nc" id="L90">		}</span>
+		// get the root
+<span class="nc" id="L92">		ParentEntityNode root = null;</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		for (ParentEntityNode node : mapTmp.values()) {</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			if (node.getParent() == null) {</span>
+<span class="nc" id="L95">				root = node;</span>
+<span class="nc" id="L96">				break;</span>
+			}
+<span class="nc" id="L98">		}</span>
+<span class="nc" id="L99">		return root;</span>
+	}
+
+//	public ChildEntityNode createTreeFromChild(List&lt;ChildEntityNode&gt; nodes, String entityId1) {// NOSONAR
+//		ChildEntityNode entityNode = new ChildEntityNode(LOSEntityConstants.ROOT_NODE, entityId1, null,
+//				findByEntityId(entityId1), null);
+//		nodes.add(entityNode);
+//		Map&lt;String, ChildEntityNode&gt; mapTmp = new HashMap&lt;&gt;();
+//		// Save all nodes to a map
+//		for (ChildEntityNode current : nodes) {
+//			mapTmp.put(current.getChildId(), current);
+//		}
+//		// loop and assign parent/child relationships
+//		for (ChildEntityNode current : nodes) {
+//			loopAndAssignParentChildRelationship(current, mapTmp);
+//		}
+//		// get the root
+//		ChildEntityNode root = null;
+//		for (ChildEntityNode node : mapTmp.values()) {
+//			if (node.getParent() == null) {
+//				root = node;
+//				break;
+//			}
+//		}
+//		return root;
+//	}
+
+	public String findEntityRelationRootNode(List&lt;ChildEntityNode&gt; nodes, String entityId1) {// NOSONAR
+<span class="nc" id="L127">		ChildEntityNode entityNode = new ChildEntityNode(LOSEntityConstants.ROOT_NODE, entityId1, null,</span>
+<span class="nc" id="L128">				findByEntityId(entityId1), null);</span>
+<span class="nc" id="L129">		nodes.add(entityNode);</span>
+<span class="nc" id="L130">		Map&lt;String, ChildEntityNode&gt; mapTmp = new HashMap&lt;&gt;();</span>
+		// Save all nodes to a map
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		for (ChildEntityNode current : nodes) {</span>
+<span class="nc" id="L133">			mapTmp.put(current.getChildId(), current);</span>
+<span class="nc" id="L134">		}</span>
+		// loop and assign parent/child relationships
+<span class="nc" id="L136">		String parentRootId = null;</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">		for (ChildEntityNode current : nodes) {</span>
+<span class="nc" id="L138">			loopAndAssignParentChildRelationship(current, mapTmp);</span>
+
+			// get the root
+<span class="nc" id="L141">			ChildEntityNode root = null;</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">			for (ChildEntityNode node : mapTmp.values()) {</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">				if (node.getParent() != null) {</span>
+<span class="nc" id="L144">					root = node;</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">					if (root.getParentId().equals(entityId1)) {</span>
+<span class="nc" id="L146">						parentRootId = root.getChildId();</span>
+<span class="nc" id="L147">						break;</span>
+					}
+				}
+<span class="nc" id="L150">			}</span>
+<span class="nc" id="L151">		}</span>
+<span class="nc" id="L152">		return parentRootId;</span>
+	}
+
+	public void validateTree(List&lt;ChildEntityNode&gt; nodes, String entityId1, String entityId2) {
+<span class="nc" id="L156">		ChildEntityNode entityNode = new ChildEntityNode(&quot;rootNode&quot;, entityId1, null, findByEntityId(entityId1), null);</span>
+<span class="nc" id="L157">		nodes.add(entityNode);</span>
+<span class="nc" id="L158">		Map&lt;String, ChildEntityNode&gt; mapTmp = new HashMap&lt;&gt;();</span>
+		// Save all nodes to a map
+<span class="nc bnc" id="L160" title="All 2 branches missed.">		for (ChildEntityNode current : nodes) {</span>
+<span class="nc" id="L161">			mapTmp.put(current.getChildId(), current);</span>
+<span class="nc" id="L162">		}</span>
+		// loop and assign parent/child relationships
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		for (ChildEntityNode current : nodes) {</span>
+<span class="nc" id="L165">			loopAndAssignParentChildRelationship(current, mapTmp);</span>
+			// get the root
+<span class="nc" id="L167">			ChildEntityNode root = null;</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">			for (ChildEntityNode node : mapTmp.values()) {</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">				if (node.getParent() != null) {</span>
+<span class="nc" id="L170">					root = node;</span>
+<span class="nc" id="L171">					validateRelationExist(root, entityId2);</span>
+				}
+<span class="nc" id="L173">			}</span>
+<span class="nc" id="L174">		}</span>
+<span class="nc" id="L175">	}</span>
+
+	private void loopAndAssignParentChildRelationship(ChildEntityNode current, Map&lt;String, ChildEntityNode&gt; mapTmp) {
+<span class="nc" id="L178">		String parentId = current.getParentId();</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		if (parentId != null) {</span>
+<span class="nc" id="L180">			ChildEntityNode parent = mapTmp.computeIfAbsent(parentId, k -&gt; mapTmp.get(parentId));</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">			if (parent != null) {</span>
+<span class="nc" id="L182">				parentPresentSetAndAdd(parentId, current, parent, mapTmp);</span>
+			}
+		}
+<span class="nc" id="L185">	}</span>
+
+	private void parentPresentSetAndAdd(String parentId, ChildEntityNode current, ChildEntityNode parent,
+			Map&lt;String, ChildEntityNode&gt; mapTmp) {
+<span class="nc" id="L189">		current.setParent(parent);</span>
+<span class="nc" id="L190">		parent.addChild(current);</span>
+<span class="nc" id="L191">		mapTmp.put(parentId, parent);</span>
+<span class="nc" id="L192">		mapTmp.put(current.getChildId(), current);</span>
+<span class="nc" id="L193">	}</span>
+
+	private void validateRelationExist(ChildEntityNode root, String entityId2) {
+<span class="nc bnc" id="L196" title="All 2 branches missed.">		if (root.getChildId().equals(entityId2)) {</span>
+<span class="nc" id="L197">			throw new BadRequestException(errorMsgs.getMessage(ENTITY_RELATION_EXIST, null, CommonUtils.getLocale()));</span>
+		}
+<span class="nc" id="L199">	}</span>
+
+	public FinancialEntity findByEntityId(String entityId1) {
+<span class="pc" id="L202">		return financialRepository.findById(entityId1).orElseThrow(() -&gt; new ResourceNotFoundException(</span>
+<span class="fc" id="L203">				errorMsgs.getMessage(ENTITY_NOT_FOUND, new Object[] { entityId1 }, CommonUtils.getLocale())));</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

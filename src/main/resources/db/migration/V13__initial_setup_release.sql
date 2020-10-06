@@ -1,0 +1,1 @@
+DELETE FROM enty.tb_config WHERE config_id = 3000012;

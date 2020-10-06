@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FinancialEntityMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.mapper</a> &gt; <span class="el_source">FinancialEntityMapper.java</span></div><h1>FinancialEntityMapper.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.mapper;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
+
+import com.idexcel.cync.los.entity.dto.CommercialEntityDto;
+import com.idexcel.cync.los.entity.dto.FinancialEntityDto;
+import com.idexcel.cync.los.entity.dto.IndividualEntityDto;
+import com.idexcel.cync.los.entity.model.CommercialEntity;
+import com.idexcel.cync.los.entity.model.FinancialEntity;
+import com.idexcel.cync.los.entity.model.IndividualFinancialEntity;
+
+/**
+ * 
+ * @author Amit
+ *
+ */
+@Mapper
+public interface FinancialEntityMapper {//NOSONAR
+<span class="nc" id="L21">	FinancialEntityMapper INSTANCE = Mappers.getMapper(FinancialEntityMapper.class);</span>
+
+	@Mapping(target = &quot;dateOfBirth&quot;, source = &quot;financialEntity.dateOfBirth&quot;, dateFormat = &quot;MM/dd/yyyy&quot;)
+	IndividualEntityDto toIndividualEntityDto(IndividualFinancialEntity financialEntity);
+
+	@Mapping(target = &quot;businessType.businessTypeId&quot;, source = &quot;businessType.configId&quot;)
+	@Mapping(target = &quot;businessType.businessCode&quot;, source = &quot;businessType.configCode&quot;)
+	@Mapping(target = &quot;businessType.configTypeCode&quot;, source = &quot;businessType.configtypeCode&quot;)
+	@Mapping(target = &quot;businessType.configValue&quot;, source = &quot;businessType.configValue&quot;)
+	@Mapping(target = &quot;businessOpenDate&quot;, source = &quot;financialEntity.businessOpenDate&quot;, dateFormat = &quot;MM/dd/yyyy&quot;)
+	@Mapping(target = &quot;naics.naicsCodeId&quot;, source =&quot;naics.configId&quot; )
+	@Mapping(target = &quot;naics.naicsCode&quot;, source =&quot;naics.configCode&quot; )
+	@Mapping(target = &quot;naics.naicsCodeValue&quot;, source =&quot;naics.configValue&quot; )
+	CommercialEntityDto toCommercialEntityDto(CommercialEntity financialEntity);
+
+	@Mapping(target = &quot;dateOfBirth&quot;, source = &quot;financialEntityDto.dateOfBirth&quot;, dateFormat = &quot;MM/dd/yyyy&quot;)
+	IndividualFinancialEntity toIndividualFinancialEntity(IndividualEntityDto financialEntityDto);
+
+	@Mapping(target = &quot;businessOpenDate&quot;, source = &quot;financialEntityDto.businessOpenDate&quot;, dateFormat = &quot;MM/dd/yyyy&quot;)
+	@Mapping(target = &quot;businessType.configId&quot;, source = &quot;businessType.businessTypeId&quot;)
+	@Mapping(target = &quot;businessType.configCode&quot;, source = &quot;businessType.businessCode&quot;)
+	@Mapping(target = &quot;businessType.configtypeCode&quot;, source = &quot;businessType.configTypeCode&quot;)
+	@Mapping(target = &quot;businessType.configValue&quot;, source = &quot;businessType.configValue&quot;)
+	@Mapping(target = &quot;naics.configId&quot;, source = &quot;naics.naicsCodeId&quot;)
+	@Mapping(target = &quot;naics.configCode&quot;, source = &quot;naics.naicsCode&quot;)
+	@Mapping(target = &quot;naics.configValue&quot;, source = &quot;naics.naicsCodeValue&quot;)
+	CommercialEntity toCommercialEntity(CommercialEntityDto financialEntityDto);
+
+	FinancialEntity toFinancialEntity(FinancialEntityDto financialEntityDto);
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

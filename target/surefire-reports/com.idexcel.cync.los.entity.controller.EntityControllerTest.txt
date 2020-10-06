@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.idexcel.cync.los.entity.controller.EntityControllerTest
+-------------------------------------------------------------------------------
+Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.802 s - in com.idexcel.cync.los.entity.controller.EntityControllerTest

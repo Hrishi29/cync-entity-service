@@ -1,0 +1,1 @@
+ALTER TABLE enty.tb_commercial_entity_details ALTER COLUMN business_type_id DROP NOT NULL;

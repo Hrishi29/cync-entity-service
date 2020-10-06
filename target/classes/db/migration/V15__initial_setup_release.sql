@@ -1,0 +1,10 @@
+ALTER TABLE enty.tb_entity ALTER COLUMN status SET DEFAULT TRUE;
+ALTER TABLE enty.tb_entity_relationship_type_map ALTER COLUMN deleted SET DEFAULT FALSE;
+ALTER TABLE enty.tb_client ALTER COLUMN status SET DEFAULT TRUE;
+UPDATE enty.tb_address_map SET created_by = 'Default User', modified_by = 'Default User';
+ALTER TABLE enty.tb_address_map ALTER COLUMN created_by SET DEFAULT 'Default User';
+ALTER TABLE enty.tb_address_map ALTER COLUMN modified_by SET DEFAULT 'Default User';
+ALTER TABLE enty.tb_address_map ALTER COLUMN created_by SET NOT NULL;
+ALTER TABLE enty.tb_address_map ALTER COLUMN modified_by SET NOT NULL;
+ALTER TABLE enty.tb_address_map ALTER COLUMN status SET DEFAULT TRUE;
+ALTER TABLE enty.tb_commercial_entity_details ALTER COLUMN created_by SET NOT NULL;

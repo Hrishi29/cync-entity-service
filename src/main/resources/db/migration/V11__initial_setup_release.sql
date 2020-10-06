@@ -1,0 +1,1 @@
+UPDATE enty.tb_config SET config_value = 'Swizerland' Where config_value = 'swizerland';

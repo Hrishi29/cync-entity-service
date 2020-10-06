@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LosEntityExceptionHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.exception</a> &gt; <span class="el_source">LosEntityExceptionHandler.java</span></div><h1>LosEntityExceptionHandler.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.exception;
+
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.ERROR_INVALID_FORMAT_EXCEPTION;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.google.common.collect.ImmutableMap;
+import com.idexcel.cync.los.entity.common.utils.CommonUtils;
+import com.idexcel.cync.los.entity.dto.ErrorDto;
+import com.idexcel.cync.los.entity.dto.ErrorResponseCode;
+
+/**
+ * Exception Handler class for Los Entity apis
+ * 
+ * @author Idexcel
+ *
+ */
+@ControllerAdvice
+<span class="fc" id="L38">public class LosEntityExceptionHandler extends ResponseEntityExceptionHandler {</span>
+
+	@Autowired
+	MessageSource errorMsgs;
+
+	private static final String URI = &quot;uri=&quot;;
+	private static final String ERROR = &quot;error&quot;;
+
+	/**
+	 * Handle bad request exception.
+	 * 
+	 * @return {@link HttpStatus} 400
+	 */
+	@ExceptionHandler({ BadRequestException.class })
+	public ResponseEntity&lt;ImmutableMap&lt;String, ErrorDto&gt;&gt; handleBadRequestException(HttpServletRequest request,
+			Exception ex) {
+<span class="nc" id="L54">		return buildErrorResponse(HttpStatus.BAD_REQUEST, ErrorResponseCode.BAD_REQUEST, ex, request);</span>
+	}
+
+	/**
+	 * Handle resource not found exception.
+	 * 
+	 * @param request the request
+	 * @param ex      the exception object
+	 * @return {@link HttpStatus} 404
+	 */
+	@ExceptionHandler({ ResourceNotFoundException.class })
+	public ResponseEntity&lt;ImmutableMap&lt;String, ErrorDto&gt;&gt; handleResourceNotFoundException(HttpServletRequest request,
+			Exception ex) {
+<span class="fc" id="L67">		return buildErrorResponse(HttpStatus.NOT_FOUND, ErrorResponseCode.RESOURCE_NOT_FOUND, ex, request);</span>
+	}
+
+	/**
+	 * Handle LosEntity not found exception.
+	 * 
+	 * @param request
+	 * @param ex
+	 * @return
+	 */
+	@ExceptionHandler({ LosEntityNotFoundException.class })
+	public ResponseEntity&lt;ImmutableMap&lt;String, ErrorDto&gt;&gt; handleEntityNotFoundException(HttpServletRequest request,
+			Exception ex) {
+<span class="nc" id="L80">		return buildErrorResponse(HttpStatus.NOT_FOUND, ErrorResponseCode.NOT_FOUND, ex, request);</span>
+	}
+
+	/**
+	 * Handle Conflict exception.
+	 * 
+	 * @param request
+	 * @param ex
+	 * @return{@link HttpStatus} 409
+	 */
+	@ExceptionHandler({ ResourceAlreadyExists.class })
+	public ResponseEntity&lt;ImmutableMap&lt;String, ErrorDto&gt;&gt; handleResourceAlreadyExistsException(
+			HttpServletRequest request, Exception ex) {
+<span class="nc" id="L93">		return buildErrorResponse(HttpStatus.CONFLICT, ErrorResponseCode.RESOURCE_ALREADY_EXIST, ex, request);</span>
+	}
+
+	@Override
+	protected ResponseEntity&lt;Object&gt; handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
+			HttpHeaders headers, HttpStatus status, WebRequest request) {
+<span class="nc" id="L99">		Throwable throwable = ex.getCause();</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		if (throwable instanceof InvalidFormatException) {</span>
+<span class="nc" id="L101">			InvalidFormatException formatException = (InvalidFormatException) throwable;</span>
+<span class="nc" id="L102">			String fieldName = &quot;&quot;;</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			for (JsonMappingException.Reference r : formatException.getPath()) {</span>
+<span class="nc" id="L104">				fieldName = r.getFieldName();</span>
+<span class="nc" id="L105">			}</span>
+<span class="nc" id="L106">			String errMsg = errorMsgs.getMessage(ERROR_INVALID_FORMAT_EXCEPTION,</span>
+<span class="nc" id="L107">					new Object[] { formatException.getValue(), fieldName }, CommonUtils.getLocale());</span>
+<span class="nc" id="L108">			ErrorDto errorDto = new ErrorDto(ErrorResponseCode.INVALID_REQUEST, errMsg,</span>
+<span class="nc" id="L109">					request.getDescription(false).replace(URI, &quot;&quot;));</span>
+<span class="nc" id="L110">			ImmutableMap&lt;String, ErrorDto&gt; responseVal = ImmutableMap.of(ERROR, errorDto);</span>
+<span class="nc" id="L111">			return new ResponseEntity&lt;&gt;(responseVal, headers, status);</span>
+		}
+<span class="nc" id="L113">		return buildErrorResponseCode(HttpStatus.BAD_REQUEST, ErrorResponseCode.BAD_REQUEST, ex);</span>
+	}
+
+	@Override
+	protected ResponseEntity&lt;Object&gt; handleMissingServletRequestParameter(MissingServletRequestParameterException ex,
+			HttpHeaders headers, HttpStatus status, WebRequest request) {
+<span class="nc" id="L119">		String error = ex.getParameterName() + &quot; parameter is missing&quot;;</span>
+<span class="nc" id="L120">		ErrorDto errorDto = new ErrorDto(ErrorResponseCode.BAD_REQUEST, error,</span>
+<span class="nc" id="L121">				request.getDescription(false).replace(URI, &quot;&quot;));</span>
+<span class="nc" id="L122">		ImmutableMap&lt;String, ErrorDto&gt; responseVal = ImmutableMap.of(ERROR, errorDto);</span>
+<span class="nc" id="L123">		return new ResponseEntity&lt;&gt;(responseVal, headers, status);</span>
+	}
+
+	private ResponseEntity&lt;Object&gt; buildErrorResponseCode(HttpStatus httpStatus, ErrorResponseCode errorResponseCode,
+			Exception ex) {
+<span class="nc" id="L128">		String msg = ex.getLocalizedMessage();</span>
+<span class="nc" id="L129">		String[] errorMessage = msg.split(&quot;\\n&quot;);</span>
+
+<span class="nc" id="L131">		String path = MDC.get(&quot;requestURI&quot;);</span>
+<span class="nc" id="L132">		ErrorDto errorDto = new ErrorDto(errorResponseCode, errorMessage[0], path);</span>
+<span class="nc" id="L133">		ImmutableMap&lt;String, ErrorDto&gt; responseVal = ImmutableMap.of(ERROR, errorDto);</span>
+<span class="nc" id="L134">		return ResponseEntity.status(httpStatus).body(responseVal);</span>
+	}
+
+	/**
+	 * Builds the error response.
+	 *
+	 * @param httpStatus        the http status
+	 * @param errorResponseCode the error response code
+	 * @param ex                the exception object
+	 * @param request           the request
+	 * @return the response entity
+	 */
+	private ResponseEntity&lt;ImmutableMap&lt;String, ErrorDto&gt;&gt; buildErrorResponse(HttpStatus httpStatus,
+			ErrorResponseCode errorResponseCode, Exception ex, HttpServletRequest request) {
+<span class="fc" id="L148">		ErrorDto errorDto = new ErrorDto(errorResponseCode, ex.getMessage(), request.getRequestURI());</span>
+<span class="fc" id="L149">		ImmutableMap&lt;String, ErrorDto&gt; responseVal = ImmutableMap.of(ERROR, errorDto);</span>
+<span class="fc" id="L150">		return ResponseEntity.status(httpStatus).body(responseVal);</span>
+	}
+
+	@Override
+	protected ResponseEntity&lt;Object&gt; handleMethodArgumentNotValid(MethodArgumentNotValidException exception,
+			HttpHeaders headers, HttpStatus status, WebRequest request) {
+<span class="nc" id="L156">		BindingResult result = exception.getBindingResult();</span>
+<span class="nc" id="L157">		FieldError error = result.getFieldError();</span>
+<span class="nc" id="L158">		String errMsg = errorMsgs.getMessage(error.getDefaultMessage(), null, CommonUtils.getLocale());</span>
+<span class="nc" id="L159">		ErrorDto errorDto = new ErrorDto(ErrorResponseCode.BAD_REQUEST, errMsg,</span>
+<span class="nc" id="L160">				request.getDescription(false).replace(URI, &quot;&quot;));</span>
+<span class="nc" id="L161">		ImmutableMap&lt;String, ErrorDto&gt; responseVal = ImmutableMap.of(ERROR, errorDto);</span>
+<span class="nc" id="L162">		return new ResponseEntity&lt;&gt;(responseVal, headers, status);</span>
+	}
+
+	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+	public ResponseEntity&lt;ImmutableMap&lt;String, ErrorDto&gt;&gt; handleTypeMismatch(MethodArgumentTypeMismatchException ex,
+			HttpServletRequest request) {
+<span class="nc" id="L168">		Throwable throwable = ex.getCause();</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		if (throwable instanceof IllegalArgumentException) {</span>
+<span class="nc" id="L170">			IllegalArgumentException illegalArgumentException = (IllegalArgumentException) throwable;</span>
+<span class="nc" id="L171">			return buildErrorResponse(HttpStatus.BAD_REQUEST, ErrorResponseCode.BAD_REQUEST, illegalArgumentException,</span>
+					request);
+		}
+<span class="nc" id="L174">		return buildErrorResponse(HttpStatus.BAD_REQUEST, ErrorResponseCode.BAD_REQUEST, ex, request);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

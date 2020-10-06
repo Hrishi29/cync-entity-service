@@ -1,0 +1,1 @@
+ALTER TABLE enty.tb_entity_relationship_type_map ADD COLUMN deleted boolean;

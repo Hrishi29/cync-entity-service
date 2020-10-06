@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EntityRelationshipTypeMapperImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.mapper</a> &gt; <span class="el_source">EntityRelationshipTypeMapperImpl.java</span></div><h1>EntityRelationshipTypeMapperImpl.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.mapper;
+
+import com.idexcel.cync.los.entity.dto.EntityNodeDto;
+import com.idexcel.cync.los.entity.dto.EntityRelationshipBorrowerDto;
+import com.idexcel.cync.los.entity.dto.EntityRelationshipDto;
+import com.idexcel.cync.los.entity.dto.EntityRelationshipTypeDto;
+import com.idexcel.cync.los.entity.model.EntityRelationshipType;
+import com.idexcel.cync.los.entity.model.FinancialEntity;
+import com.idexcel.cync.los.entity.model.LosConfigDetails;
+import com.idexcel.cync.los.entity.model.ParentEntityNode;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Generated;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Generated(
+    value = &quot;org.mapstruct.ap.MappingProcessor&quot;,
+    comments = &quot;version: 1.3.0.Final, compiler: javac, environment: Java 14.0.2 (Oracle Corporation)&quot;
+)
+@Component
+<span class="fc" id="L22">public class EntityRelationshipTypeMapperImpl implements EntityRelationshipTypeMapper {</span>
+
+    @Autowired
+    private LookupDataMapper lookupDataMapper;
+
+    @Override
+    public EntityRelationshipType toEntityRelationshipType(EntityRelationshipTypeDto entityRelationshipTypeDto) {
+<span class="nc bnc" id="L29" title="All 2 branches missed.">        if ( entityRelationshipTypeDto == null ) {</span>
+<span class="nc" id="L30">            return null;</span>
+        }
+
+<span class="nc" id="L33">        EntityRelationshipType entityRelationshipType = new EntityRelationshipType();</span>
+
+<span class="nc" id="L35">        entityRelationshipType.setRelationshiptypeId( entityRelationshipTypeDtoEntityRelationConfigDetailConfigId( entityRelationshipTypeDto ) );</span>
+<span class="nc" id="L36">        entityRelationshipType.setEntityRelationshiptypeId( entityRelationshipTypeDto.getEntityRelationshiptypeId() );</span>
+<span class="nc" id="L37">        entityRelationshipType.setEntityId1( entityRelationshipTypeDto.getEntityId1() );</span>
+<span class="nc" id="L38">        entityRelationshipType.setParentEntity( entityRelationshipTypeDto.getParentEntity() );</span>
+<span class="nc" id="L39">        entityRelationshipType.setEntityId2( entityRelationshipTypeDto.getEntityId2() );</span>
+<span class="nc" id="L40">        entityRelationshipType.setChildEntity( entityRelationshipTypeDto.getChildEntity() );</span>
+<span class="nc" id="L41">        entityRelationshipType.setEntityRelationConfigDetail( entityRelationshipTypeDto.getEntityRelationConfigDetail() );</span>
+<span class="nc" id="L42">        entityRelationshipType.setOwnership( entityRelationshipTypeDto.getOwnership() );</span>
+<span class="nc" id="L43">        entityRelationshipType.setStatus( entityRelationshipTypeDto.isStatus() );</span>
+
+<span class="nc" id="L45">        return entityRelationshipType;</span>
+    }
+
+    @Override
+    public EntityRelationshipType toEntityRelationshipCreteType(EntityRelationshipDto entityRelationshipDto) {
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if ( entityRelationshipDto == null ) {</span>
+<span class="nc" id="L51">            return null;</span>
+        }
+
+<span class="nc" id="L54">        EntityRelationshipType entityRelationshipType = new EntityRelationshipType();</span>
+
+<span class="nc" id="L56">        entityRelationshipType.setRelationshiptypeId( entityRelationshipDtoEntityRelationConfigDetailConfigId( entityRelationshipDto ) );</span>
+<span class="nc" id="L57">        entityRelationshipType.setEntityId2( entityRelationshipDto.getEntityId2() );</span>
+<span class="nc" id="L58">        entityRelationshipType.setEntityRelationConfigDetail( entityRelationshipDto.getEntityRelationConfigDetail() );</span>
+<span class="nc" id="L59">        entityRelationshipType.setOwnership( entityRelationshipDto.getOwnership() );</span>
+<span class="nc" id="L60">        entityRelationshipType.setStatus( entityRelationshipDto.isStatus() );</span>
+
+<span class="nc" id="L62">        return entityRelationshipType;</span>
+    }
+
+    @Override
+    public EntityNodeDto toEntityNodeDto(ParentEntityNode parentEntityNode) {
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        if ( parentEntityNode == null ) {</span>
+<span class="nc" id="L68">            return null;</span>
+        }
+
+<span class="nc" id="L71">        EntityNodeDto entityNodeDto = new EntityNodeDto();</span>
+
+<span class="nc" id="L73">        entityNodeDto.setLosConfigDetails( lookupDataMapper.toConfigDetailsDto( parentEntityNode.getLosConfigDetails() ) );</span>
+<span class="nc" id="L74">        entityNodeDto.setChildren( parentEntityNodeListToEntityNodeDtoList( parentEntityNode.getChildren() ) );</span>
+<span class="nc" id="L75">        entityNodeDto.setParentEntity( parentEntityNode.getParentEntity() );</span>
+<span class="nc" id="L76">        entityNodeDto.setChildEntity( parentEntityNode.getChildEntity() );</span>
+<span class="nc" id="L77">        entityNodeDto.setChildId( parentEntityNode.getChildId() );</span>
+<span class="nc" id="L78">        entityNodeDto.setParentId( parentEntityNode.getParentId() );</span>
+
+<span class="nc" id="L80">        return entityNodeDto;</span>
+    }
+
+    @Override
+    public List&lt;EntityRelationshipTypeDto&gt; toEntityRelationshipTypeDto(List&lt;EntityRelationshipType&gt; entityRelationshipType) {
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        if ( entityRelationshipType == null ) {</span>
+<span class="nc" id="L86">            return null;</span>
+        }
+
+<span class="nc" id="L89">        List&lt;EntityRelationshipTypeDto&gt; list = new ArrayList&lt;EntityRelationshipTypeDto&gt;( entityRelationshipType.size() );</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        for ( EntityRelationshipType entityRelationshipType1 : entityRelationshipType ) {</span>
+<span class="nc" id="L91">            list.add( entityRelationshipTypeToEntityRelationshipTypeDto( entityRelationshipType1 ) );</span>
+<span class="nc" id="L92">        }</span>
+
+<span class="nc" id="L94">        return list;</span>
+    }
+
+    @Override
+    public EntityRelationshipBorrowerDto toEntityRelationshipBorrowerDto(EntityRelationshipType entityRelationshipType) {
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        if ( entityRelationshipType == null ) {</span>
+<span class="nc" id="L100">            return null;</span>
+        }
+
+<span class="nc" id="L103">        EntityRelationshipBorrowerDto entityRelationshipBorrowerDto = new EntityRelationshipBorrowerDto();</span>
+
+<span class="nc" id="L105">        getEntityType( entityRelationshipBorrowerDto, entityRelationshipType );</span>
+
+<span class="nc" id="L107">        entityRelationshipBorrowerDto.setEntityId( entityRelationshipTypeChildEntityEntityId( entityRelationshipType ) );</span>
+<span class="nc" id="L108">        entityRelationshipBorrowerDto.setEntityType( entityRelationshipTypeChildEntityEntityTypeConfigConfigCode( entityRelationshipType ) );</span>
+<span class="nc" id="L109">        entityRelationshipBorrowerDto.setRelation( entityRelationshipTypeEntityRelationConfigDetailConfigCode( entityRelationshipType ) );</span>
+<span class="nc" id="L110">        entityRelationshipBorrowerDto.setOwnership( entityRelationshipType.getOwnership() );</span>
+
+<span class="nc" id="L112">        return entityRelationshipBorrowerDto;</span>
+    }
+
+    @Override
+    public List&lt;EntityRelationshipBorrowerDto&gt; toEntityRelationshipBorrowerDto(List&lt;EntityRelationshipType&gt; entityRelationshipType) {
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        if ( entityRelationshipType == null ) {</span>
+<span class="nc" id="L118">            return null;</span>
+        }
+
+<span class="nc" id="L121">        List&lt;EntityRelationshipBorrowerDto&gt; list = new ArrayList&lt;EntityRelationshipBorrowerDto&gt;( entityRelationshipType.size() );</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        for ( EntityRelationshipType entityRelationshipType1 : entityRelationshipType ) {</span>
+<span class="nc" id="L123">            list.add( toEntityRelationshipBorrowerDto( entityRelationshipType1 ) );</span>
+<span class="nc" id="L124">        }</span>
+
+<span class="nc" id="L126">        return list;</span>
+    }
+
+    private Long entityRelationshipTypeDtoEntityRelationConfigDetailConfigId(EntityRelationshipTypeDto entityRelationshipTypeDto) {
+<span class="nc bnc" id="L130" title="All 2 branches missed.">        if ( entityRelationshipTypeDto == null ) {</span>
+<span class="nc" id="L131">            return null;</span>
+        }
+<span class="nc" id="L133">        LosConfigDetails entityRelationConfigDetail = entityRelationshipTypeDto.getEntityRelationConfigDetail();</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        if ( entityRelationConfigDetail == null ) {</span>
+<span class="nc" id="L135">            return null;</span>
+        }
+<span class="nc" id="L137">        Long configId = entityRelationConfigDetail.getConfigId();</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        if ( configId == null ) {</span>
+<span class="nc" id="L139">            return null;</span>
+        }
+<span class="nc" id="L141">        return configId;</span>
+    }
+
+    private Long entityRelationshipDtoEntityRelationConfigDetailConfigId(EntityRelationshipDto entityRelationshipDto) {
+<span class="nc bnc" id="L145" title="All 2 branches missed.">        if ( entityRelationshipDto == null ) {</span>
+<span class="nc" id="L146">            return null;</span>
+        }
+<span class="nc" id="L148">        LosConfigDetails entityRelationConfigDetail = entityRelationshipDto.getEntityRelationConfigDetail();</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        if ( entityRelationConfigDetail == null ) {</span>
+<span class="nc" id="L150">            return null;</span>
+        }
+<span class="nc" id="L152">        Long configId = entityRelationConfigDetail.getConfigId();</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">        if ( configId == null ) {</span>
+<span class="nc" id="L154">            return null;</span>
+        }
+<span class="nc" id="L156">        return configId;</span>
+    }
+
+    protected List&lt;EntityNodeDto&gt; parentEntityNodeListToEntityNodeDtoList(List&lt;ParentEntityNode&gt; list) {
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        if ( list == null ) {</span>
+<span class="nc" id="L161">            return null;</span>
+        }
+
+<span class="nc" id="L164">        List&lt;EntityNodeDto&gt; list1 = new ArrayList&lt;EntityNodeDto&gt;( list.size() );</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">        for ( ParentEntityNode parentEntityNode : list ) {</span>
+<span class="nc" id="L166">            list1.add( toEntityNodeDto( parentEntityNode ) );</span>
+<span class="nc" id="L167">        }</span>
+
+<span class="nc" id="L169">        return list1;</span>
+    }
+
+    protected EntityRelationshipTypeDto entityRelationshipTypeToEntityRelationshipTypeDto(EntityRelationshipType entityRelationshipType) {
+<span class="nc bnc" id="L173" title="All 2 branches missed.">        if ( entityRelationshipType == null ) {</span>
+<span class="nc" id="L174">            return null;</span>
+        }
+
+<span class="nc" id="L177">        EntityRelationshipTypeDto entityRelationshipTypeDto = new EntityRelationshipTypeDto();</span>
+
+<span class="nc" id="L179">        entityRelationshipTypeDto.setEntityRelationshiptypeId( entityRelationshipType.getEntityRelationshiptypeId() );</span>
+<span class="nc" id="L180">        entityRelationshipTypeDto.setEntityId1( entityRelationshipType.getEntityId1() );</span>
+<span class="nc" id="L181">        entityRelationshipTypeDto.setParentEntity( entityRelationshipType.getParentEntity() );</span>
+<span class="nc" id="L182">        entityRelationshipTypeDto.setEntityId2( entityRelationshipType.getEntityId2() );</span>
+<span class="nc" id="L183">        entityRelationshipTypeDto.setChildEntity( entityRelationshipType.getChildEntity() );</span>
+<span class="nc" id="L184">        entityRelationshipTypeDto.setRelationshiptypeId( entityRelationshipType.getRelationshiptypeId() );</span>
+<span class="nc" id="L185">        entityRelationshipTypeDto.setEntityRelationConfigDetail( entityRelationshipType.getEntityRelationConfigDetail() );</span>
+<span class="nc" id="L186">        entityRelationshipTypeDto.setOwnership( entityRelationshipType.getOwnership() );</span>
+<span class="nc" id="L187">        entityRelationshipTypeDto.setStatus( entityRelationshipType.isStatus() );</span>
+
+<span class="nc" id="L189">        return entityRelationshipTypeDto;</span>
+    }
+
+    private String entityRelationshipTypeChildEntityEntityId(EntityRelationshipType entityRelationshipType) {
+<span class="nc bnc" id="L193" title="All 2 branches missed.">        if ( entityRelationshipType == null ) {</span>
+<span class="nc" id="L194">            return null;</span>
+        }
+<span class="nc" id="L196">        FinancialEntity childEntity = entityRelationshipType.getChildEntity();</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        if ( childEntity == null ) {</span>
+<span class="nc" id="L198">            return null;</span>
+        }
+<span class="nc" id="L200">        String entityId = childEntity.getEntityId();</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">        if ( entityId == null ) {</span>
+<span class="nc" id="L202">            return null;</span>
+        }
+<span class="nc" id="L204">        return entityId;</span>
+    }
+
+    private String entityRelationshipTypeChildEntityEntityTypeConfigConfigCode(EntityRelationshipType entityRelationshipType) {
+<span class="nc bnc" id="L208" title="All 2 branches missed.">        if ( entityRelationshipType == null ) {</span>
+<span class="nc" id="L209">            return null;</span>
+        }
+<span class="nc" id="L211">        FinancialEntity childEntity = entityRelationshipType.getChildEntity();</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">        if ( childEntity == null ) {</span>
+<span class="nc" id="L213">            return null;</span>
+        }
+<span class="nc" id="L215">        LosConfigDetails entityTypeConfig = childEntity.getEntityTypeConfig();</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">        if ( entityTypeConfig == null ) {</span>
+<span class="nc" id="L217">            return null;</span>
+        }
+<span class="nc" id="L219">        String configCode = entityTypeConfig.getConfigCode();</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">        if ( configCode == null ) {</span>
+<span class="nc" id="L221">            return null;</span>
+        }
+<span class="nc" id="L223">        return configCode;</span>
+    }
+
+    private String entityRelationshipTypeEntityRelationConfigDetailConfigCode(EntityRelationshipType entityRelationshipType) {
+<span class="nc bnc" id="L227" title="All 2 branches missed.">        if ( entityRelationshipType == null ) {</span>
+<span class="nc" id="L228">            return null;</span>
+        }
+<span class="nc" id="L230">        LosConfigDetails entityRelationConfigDetail = entityRelationshipType.getEntityRelationConfigDetail();</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">        if ( entityRelationConfigDetail == null ) {</span>
+<span class="nc" id="L232">            return null;</span>
+        }
+<span class="nc" id="L234">        String configCode = entityRelationConfigDetail.getConfigCode();</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">        if ( configCode == null ) {</span>
+<span class="nc" id="L236">            return null;</span>
+        }
+<span class="nc" id="L238">        return configCode;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

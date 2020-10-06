@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IndividualEntityDto.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.dto</a> &gt; <span class="el_source">IndividualEntityDto.java</span></div><h1>IndividualEntityDto.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.dto;
+
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.idexcel.cync.los.entity.common.constants.LOSEntityConstants;
+import com.idexcel.cync.los.entity.view.View;
+
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Getter;
+import lombok.Setter;
+
+<span class="fc" id="L16">@Setter</span>
+@Getter
+<span class="fc" id="L18">public class IndividualEntityDto extends FinancialEntityDto {</span>
+
+	@ApiModelProperty(notes = &quot;date of birth&quot;, example = &quot;06/30/1995&quot;, required = true)
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = LOSEntityConstants.DATE_FORMAT)
+	@Pattern(regexp = LOSEntityConstants.DATE_PATTERN, message = &quot;error.Date.format&quot;)
+	@JsonView({ View.AllFields.class, View.IndividualEntityView.class })
+	@Size(min = 10, max = 10, message = &quot;error.dateOfBirth.length&quot;)
+<span class="fc" id="L25">	private String dateOfBirth;</span>
+
+	@NotNull(message = &quot;error.firstName.value&quot;)
+	@Pattern(regexp = LOSEntityConstants.INDIVIDUAL_ENTITY_NAME_REGEX, message = &quot;error.firstName.format&quot;)//NOSONAR
+	@JsonView({ View.AllFields.class, View.IndividualEntityView.class, View.EntityNameSearchView.class,
+			View.EntityTreeDataView.class})
+<span class="fc" id="L31">	private String firstName;</span>
+
+	@Size(max = 1, message = &quot;error.name.middleNamelength&quot;)
+	@Pattern(regexp = LOSEntityConstants.INDIVIDUAL_ENTITY_NAME_REGEX, message = &quot;error.middleName.format&quot;)//NOSONAR
+	@JsonView({ View.AllFields.class, View.IndividualEntityView.class, View.EntityNameSearchView.class,
+			View.EntityTreeDataView.class})
+<span class="fc" id="L37">	private String middleName;</span>
+
+	@Pattern(regexp = LOSEntityConstants.INDIVIDUAL_ENTITY_NAME_REGEX, message = &quot;error.lastName.format&quot;)//NOSONAR
+	@NotNull(message = &quot;error.lastName.value&quot;)
+	@JsonView({ View.AllFields.class, View.IndividualEntityView.class, View.EntityNameSearchView.class,
+			View.EntityTreeDataView.class})
+<span class="fc" id="L43">	private String lastName;</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

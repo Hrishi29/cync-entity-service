@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pmd-cpd>
+   <duplication lines="32" tokens="163">
+      <file line="31"
+            path="/Users/hrishi94/Github/los-entity-service/src/main/java/com/idexcel/cync/los/entity/model/EntityNode.java"/>
+      <file line="31"
+            path="/Users/hrishi94/Github/los-entity-service/src/main/java/com/idexcel/cync/los/entity/model/ParentEntityNode.java"/>
+      <codefragment><![CDATA[	public EntityNode(String value, String childId, String parentId, FinancialEntity childEntity,
+			FinancialEntity parentEntity) {
+
+		this.childId = childId;
+		this.parentId = parentId;
+		this.children = new ArrayList<>();
+		this.childEntity = childEntity;
+		this.parentEntity = parentEntity;
+	}
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(columnDefinition = "serial", name = "entity_relationshiptype_id")
+	private Long entityRelationshiptypeId;
+
+	@Column(name = "entity_id2")
+	private String childId;
+
+	@OneToOne
+	@JoinColumn(name = "entity_id2", referencedColumnName = "entity_id", insertable = false, updatable = false)
+	private FinancialEntity childEntity;
+
+	@Column(name = "entity_id1")
+	private String parentId;
+
+	@ManyToOne
+	@JoinColumn(name = "entity_id1", referencedColumnName = "entity_id", insertable = false, updatable = false)
+	private FinancialEntity parentEntity;
+
+	@JoinColumn(name = "entity_id1", referencedColumnName = "entity_id2", insertable = false, updatable = false)
+	@ManyToOne
+	private  EntityNode parent;]]></codefragment>
+   </duplication>
+</pmd-cpd>

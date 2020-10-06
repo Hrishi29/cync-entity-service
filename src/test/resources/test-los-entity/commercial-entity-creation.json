@@ -1,0 +1,43 @@
+{
+  "address": "Bangalore",
+  "businessName": "Test",
+  "businessOpenDate": "06/30/1995",
+  "businessType": {
+    "businessTypeId": 3000003,
+    "businessCode": "LLC",
+    "configTypeCode": "string",
+    "configValue": "string"
+  },
+  "city": "string",
+  "country": {
+    "countryId": 4000023,
+    "countryCode": "USA",
+    "countryName": "United States"
+  },
+  "email": "test@g.com",
+  "entityId": "string",
+  "entityTypeConfig": {
+    "configId": 3000002,
+    "configCode": "COMMERCIAL",
+    "configtypeId": 2000003,
+    "configtypeCode": "ENTITY",
+    "configValue": "Commercial"
+  },
+  "map": "string",
+  "naics": {
+    "naicsCodeId": 6000001,
+    "naicsCode": "111",
+    "naicsCodeValue": "Crop Production"
+  },
+  "notes": "test",
+  "phone": "1234567890",
+  "relationshipManagerEmail": null,
+  "state": {
+    "stateId": 5000001,
+    "countryId": 4000023,
+    "stateCode": "AL",
+    "stateName": "Alabama"
+  },
+  "status": true,
+  "zipCode": 12345
+}

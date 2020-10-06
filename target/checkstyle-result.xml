@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="8.19">
+<file name="/Users/hrishi94/Github/los-entity-service/src/main/java/com/idexcel/cync/los/entity/validator/ClientValidator.java">
+<error line="1" severity="warning" message="Missing package-info.java file." source="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocPackageCheck"/>
+</file>
+<file name="/Users/hrishi94/Github/los-entity-service/target/generated-sources/annotations/com/idexcel/cync/los/entity/mapper/LookupDataMapperImpl.java">
+<error line="1" severity="warning" message="Missing package-info.java file." source="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocPackageCheck"/>
+</file>
+</checkstyle>

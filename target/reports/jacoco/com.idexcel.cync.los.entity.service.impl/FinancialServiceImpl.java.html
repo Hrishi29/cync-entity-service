@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FinancialServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.service.impl</a> &gt; <span class="el_source">FinancialServiceImpl.java</span></div><h1>FinancialServiceImpl.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.service.impl;
+
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.ENTITTY_TYPE_NOT_FOUND;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.INVALID_ENTITY_ID;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.MISMATCH_CONFIG_ID;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
+import com.idexcel.cync.los.entity.common.constants.LOSEntityConstants;
+import com.idexcel.cync.los.entity.common.utils.CommonUtils;
+import com.idexcel.cync.los.entity.dao.CommercialEntityRepository;
+import com.idexcel.cync.los.entity.dao.CommercialNameSearchRepository;
+import com.idexcel.cync.los.entity.dao.EntityTypeLookupRepository;
+import com.idexcel.cync.los.entity.dao.FinancialEntityListRepository;
+import com.idexcel.cync.los.entity.dao.FinancialRepository;
+import com.idexcel.cync.los.entity.dao.IndividualEntityRepository;
+import com.idexcel.cync.los.entity.dao.IndividualNameSearchRepository;
+import com.idexcel.cync.los.entity.dao.LosConfigRepository;
+import com.idexcel.cync.los.entity.exception.BadRequestException;
+import com.idexcel.cync.los.entity.exception.ResourceNotFoundException;
+import com.idexcel.cync.los.entity.model.CommercialEntity;
+import com.idexcel.cync.los.entity.model.FinancialEntity;
+import com.idexcel.cync.los.entity.model.FinancialEntityList;
+import com.idexcel.cync.los.entity.model.IndividualFinancialEntity;
+import com.idexcel.cync.los.entity.model.LosConfig;
+import com.idexcel.cync.los.entity.model.LosConfigDetails;
+import com.idexcel.cync.los.entity.service.FinancialService;
+import com.idexcel.cync.los.entity.validator.FinancialServiceImplValidator;
+
+/**
+ * 
+ * @author Idexcel
+ *
+ */
+
+@Service
+public class FinancialServiceImpl implements FinancialService {
+
+<span class="fc" id="L48">	private static final Logger LOG = LoggerFactory.getLogger(FinancialServiceImpl.class);</span>
+	private MessageSource errorMsgs;
+	private FinancialRepository financialRepository;
+	private LosConfigRepository losConfigRepository;
+	private EntityTypeLookupRepository entityTypeLookupRepository;
+	private IndividualEntityRepository individualEntityRepository;
+	private CommercialEntityRepository commercialEntityRepository;
+	private FinancialServiceImplValidator financialServiceImplValidator;
+
+	@Autowired
+	private IndividualNameSearchRepository individualNameSearchRepository;
+
+	@Autowired
+	private CommercialNameSearchRepository commercialNameSearchRepository;
+
+	@Autowired
+	FinancialEntityListRepository financialEntityListRepository;
+
+	@Autowired
+	public FinancialServiceImpl(MessageSource errorMsgs, FinancialRepository financialRepository,
+			LosConfigRepository losConfigRepository, EntityTypeLookupRepository entityTypeLookupRepository,
+			IndividualEntityRepository individualEntityRepository,
+			CommercialEntityRepository commercialEntityRepository,
+<span class="fc" id="L71">			FinancialServiceImplValidator financialServiceImplValidator) {</span>
+<span class="fc" id="L72">		this.errorMsgs = errorMsgs;</span>
+<span class="fc" id="L73">		this.financialRepository = financialRepository;</span>
+<span class="fc" id="L74">		this.losConfigRepository = losConfigRepository;</span>
+<span class="fc" id="L75">		this.entityTypeLookupRepository = entityTypeLookupRepository;</span>
+<span class="fc" id="L76">		this.individualEntityRepository = individualEntityRepository;</span>
+<span class="fc" id="L77">		this.commercialEntityRepository = commercialEntityRepository;</span>
+<span class="fc" id="L78">		this.financialServiceImplValidator = financialServiceImplValidator;</span>
+<span class="fc" id="L79">	}</span>
+
+	/**
+	 * Method to Return List of EntityDetails with SortBy(EntityFields),
+	 * sortDirection,Number of Entities per page
+	 */
+	@Override
+	public List&lt;FinancialEntityList&gt; findAllEntity(LosConfigDetails losConfigDetails) {
+<span class="fc bfc" id="L87" title="All 2 branches covered.">		if (losConfigDetails.getConfigId() != null) {</span>
+<span class="fc" id="L88">			Optional&lt;LosConfigDetails&gt; entityTypeDetails = entityTypeLookupRepository</span>
+<span class="fc" id="L89">					.findById(losConfigDetails.getConfigId());</span>
+<span class="fc" id="L90">			LOG.debug(&quot;Getting Entities with ConfiId(EntityTypeId)&quot;);</span>
+<span class="fc" id="L91">			return financialEntityListRepository.findByEntityTypeConfig(entityTypeDetails,</span>
+<span class="fc" id="L92">					Sort.by(Sort.Order.desc(&quot;audit.createdAt&quot;)));</span>
+		} else {
+<span class="fc" id="L94">			LOG.debug(&quot;Getting Entities without ConfiId(EntityTypeId)&quot;);</span>
+<span class="fc" id="L95">			return financialEntityListRepository.findAll(Sort.by(Sort.Order.desc(&quot;audit.createdAt&quot;)));</span>
+		}
+	}
+
+	/**
+	 * Method for Creating The Entity(Commercial/Individual) and Save to Database
+	 * 
+	 */
+	@Override
+	public String saveEntity(FinancialEntity entity, Long entityTypeId) {
+<span class="fc" id="L105">		financialServiceImplValidator.isValidClient(entity);</span>
+<span class="fc" id="L106">		LosConfig losConfig = losConfigRepository.findById(entityTypeId)</span>
+<span class="fc" id="L107">				.orElseThrow(() -&gt; new ResourceNotFoundException(</span>
+<span class="fc" id="L108">						errorMsgs.getMessage(ENTITTY_TYPE_NOT_FOUND, null, CommonUtils.getLocale())));</span>
+<span class="fc bfc" id="L109" title="All 4 branches covered.">		if ((entity.getEntityTypeConfig() != null) &amp;&amp; (entity.getEntityTypeConfig().getConfigId() == null</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">				|| !entity.getEntityTypeConfig().getConfigId().equals(entityTypeId))) {</span>
+<span class="fc" id="L111">			throw new BadRequestException(errorMsgs.getMessage(MISMATCH_CONFIG_ID, new Object[] {</span>
+<span class="fc" id="L112">					String.valueOf(entity.getEntityTypeConfig().getConfigId()), String.valueOf(entityTypeId) },</span>
+<span class="fc" id="L113">					CommonUtils.getLocale()));</span>
+		}
+<span class="fc" id="L115">		financialServiceImplValidator.isCountryStateNullOrNot(entity);</span>
+<span class="fc" id="L116">		financialServiceImplValidator.isEntitiyTypeConfigIdValid(entity, entityTypeId);</span>
+<span class="fc" id="L117">		financialServiceImplValidator.isValidEntity(entity, losConfig);</span>
+<span class="fc" id="L118">		financialServiceImplValidator.isValidNaicsCode(entity);</span>
+<span class="fc" id="L119">		financialServiceImplValidator.isValidRM(entity);</span>
+<span class="fc" id="L120">		entity.setEntityTypeId(entityTypeId);</span>
+<span class="fc" id="L121">		LOG.debug(&quot;Saving entity..&quot;);</span>
+<span class="fc" id="L122">		return financialRepository.save(entity).getEntityId();</span>
+	}
+
+	/**
+	 * Method to Return Entity Based On EntityId if Present
+	 */
+	@Override
+	public FinancialEntity findById(String id) {
+<span class="fc" id="L130">		return financialRepository.findById(id).orElseThrow(() -&gt; new ResourceNotFoundException(</span>
+<span class="fc" id="L131">				errorMsgs.getMessage(INVALID_ENTITY_ID, new Object[] { id }, CommonUtils.getLocale())));</span>
+	}
+
+	/**
+	 * Method to Activate Entity
+	 */
+	@Override
+	public void deactivateEntity(String entityId) {
+<span class="fc" id="L139">		financialRepository.deactivateEntity(entityId);</span>
+<span class="fc" id="L140">	}</span>
+
+	/**
+	 * Method to Activate Entity
+	 */
+	@Override
+	public void activateEntity(String entityId) {
+<span class="fc" id="L147">		financialRepository.activateEntity(entityId);</span>
+<span class="fc" id="L148">	}</span>
+
+	/**
+	 * Method to SearchEntityByName returns List of Entity with same or matching
+	 * Name(FirstName, LastName, MiddleName &amp; BusinessName)
+	 */
+	@Override
+	public List&lt;FinancialEntity&gt; searchEntityByName(String entityName) {
+<span class="fc" id="L156">		List&lt;FinancialEntity&gt; financialEntity = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L157">		List&lt;IndividualFinancialEntity&gt; individualFinancialEntity = null;</span>
+<span class="fc" id="L158">		List&lt;CommercialEntity&gt; commercialEntity = commercialEntityRepository</span>
+<span class="fc" id="L159">				.findByBusinessNameIgnoreCaseContaining(entityName);</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">		if (commercialEntity != null) {</span>
+<span class="fc" id="L161">			financialEntity.addAll(commercialEntity);</span>
+		}
+<span class="fc bfc" id="L163" title="All 2 branches covered.">		if (!entityName.isEmpty()) {</span>
+<span class="fc" id="L164">			String[] splittedName = entityName.split(&quot; &quot;);</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">			if (splittedName.length == 1) {</span>
+<span class="fc" id="L166">				String splittedFName = splittedName[0];</span>
+<span class="fc" id="L167">				individualFinancialEntity = individualEntityRepository</span>
+<span class="fc" id="L168">						.findByFirstNameIgnoreCaseContaining(splittedFName);</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">				if (individualFinancialEntity.isEmpty()) {</span>
+<span class="fc" id="L170">					individualFinancialEntity = individualEntityRepository</span>
+<span class="fc" id="L171">							.findByLastNameIgnoreCaseContaining(splittedFName);</span>
+				}
+<span class="fc" id="L173">				financialEntity.addAll(individualFinancialEntity);</span>
+<span class="fc" id="L174">				return financialEntity;</span>
+<span class="fc bfc" id="L175" title="All 4 branches covered.">			} else if (splittedName.length == 2 &amp;&amp; splittedName[1].length() == 1) {</span>
+<span class="fc" id="L176">				String splittedFName = splittedName[0];</span>
+<span class="fc" id="L177">				String splittedMName = splittedName[1];</span>
+<span class="fc" id="L178">				individualFinancialEntity = individualEntityRepository</span>
+<span class="fc" id="L179">						.findByFirstNameIgnoreCaseContainingAndMiddleNameIgnoreCaseContaining(splittedFName,</span>
+								splittedMName);
+<span class="fc" id="L181">				financialEntity.addAll(individualFinancialEntity);</span>
+<span class="fc" id="L182">				return financialEntity;</span>
+<span class="pc bpc" id="L183" title="1 of 4 branches missed.">			} else if (splittedName.length == 2 &amp;&amp; splittedName[1].length() &gt; 1) {</span>
+<span class="fc" id="L184">				String splittedFName = splittedName[0];</span>
+<span class="fc" id="L185">				String splittedLName = splittedName[1];</span>
+<span class="fc" id="L186">				individualFinancialEntity = individualEntityRepository</span>
+<span class="fc" id="L187">						.findByFirstNameIgnoreCaseContainingOrLastNameIgnoreCaseContaining(splittedFName,</span>
+								splittedLName);
+<span class="fc" id="L189">				financialEntity.addAll(individualFinancialEntity);</span>
+<span class="fc" id="L190">				return financialEntity;</span>
+<span class="fc bfc" id="L191" title="All 4 branches covered.">			} else if (splittedName.length == 3 &amp;&amp; splittedName[1].length() == 1) {</span>
+<span class="fc" id="L192">				String splittedFName = splittedName[0];</span>
+<span class="fc" id="L193">				String splittedMName = splittedName[1];</span>
+<span class="fc" id="L194">				String splittedLName = splittedName[2];</span>
+<span class="fc" id="L195">				individualFinancialEntity = individualEntityRepository</span>
+<span class="fc" id="L196">						.findByFirstNameIgnoreCaseContainingAndMiddleNameIgnoreCaseContainingAndLastNameIgnoreCaseContaining(</span>
+								splittedFName, splittedMName, splittedLName);
+<span class="fc" id="L198">				financialEntity.addAll(individualFinancialEntity);</span>
+<span class="fc" id="L199">				return financialEntity;</span>
+			}
+		}
+<span class="fc" id="L202">		return financialEntity;</span>
+	}
+
+	/**
+	 * Method to searchDuplicateEntityName returns List of Entity with same or
+	 * matching Name(FirstName, LastName, MiddleName &amp; BusinessName)
+	 */
+	@Override
+	public List&lt;FinancialEntity&gt; searchDuplicateEntityName(Long entityTypeId, String businessName, String firstName,
+			String middleName, String lastName) {
+<span class="fc" id="L212">		List&lt;FinancialEntity&gt; financialEntityList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L213">		LosConfig losConfig = losConfigRepository.findById(entityTypeId)</span>
+<span class="fc" id="L214">				.orElseThrow(() -&gt; new ResourceNotFoundException(</span>
+<span class="fc" id="L215">						errorMsgs.getMessage(ENTITTY_TYPE_NOT_FOUND, null, CommonUtils.getLocale())));</span>
+<span class="fc bfc" id="L216" title="All 2 branches covered.">		if (losConfig.getConfigCode().equals(LOSEntityConstants.INDIVIDUAL_CONFIG_CODE)) {</span>
+<span class="fc" id="L217">			List&lt;IndividualFinancialEntity&gt; individualFinancialEntity = individualNameSearchRepository</span>
+<span class="fc" id="L218">					.findByFirstNameIgnoreCaseAndMiddleNameIgnoreCaseAndLastNameIgnoreCase(firstName, middleName,</span>
+							lastName);
+<span class="fc bfc" id="L220" title="All 2 branches covered.">			if (!individualFinancialEntity.isEmpty()) {</span>
+<span class="fc" id="L221">				financialEntityList.addAll(individualFinancialEntity);</span>
+			}
+<span class="fc bfc" id="L223" title="All 2 branches covered.">		} else if (losConfig.getConfigCode().equals(LOSEntityConstants.COMMERCIAL_CONFIG_CODE)) {</span>
+<span class="fc" id="L224">			List&lt;CommercialEntity&gt; listcommercialEntity = commercialNameSearchRepository</span>
+<span class="fc" id="L225">					.findByBusinessNameIgnoreCase(businessName);</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">			if (!listcommercialEntity.isEmpty()) {</span>
+<span class="fc" id="L227">				financialEntityList.addAll(listcommercialEntity);</span>
+			}
+		}
+<span class="fc" id="L230">		return financialEntityList;</span>
+	}
+
+	/**
+	 * Method for Updating The Entity(Commercial/Individual) and Save to Database
+	 */
+	@Override
+	public String updateEntity(Long entityTypeId, String entityId, FinancialEntity entity) {
+<span class="fc" id="L238">		LOG.debug(&quot;updating entity..&quot;);</span>
+<span class="fc" id="L239">		financialServiceImplValidator.isValidClient(entity);</span>
+<span class="fc" id="L240">		FinancialEntity financialEntity = financialRepository.findById(entityId)</span>
+<span class="fc" id="L241">				.orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Entity id not found: &quot; + entityId));</span>
+<span class="fc" id="L242">		entity.setEntityId(financialEntity.getEntityId());</span>
+<span class="fc" id="L243">		entity.setEntityTypeId(entityTypeId);</span>
+<span class="fc" id="L244">		LosConfig losConfig = losConfigRepository.findById(entityTypeId)</span>
+<span class="fc" id="L245">				.orElseThrow(() -&gt; new ResourceNotFoundException(</span>
+<span class="fc" id="L246">						errorMsgs.getMessage(ENTITTY_TYPE_NOT_FOUND, null, CommonUtils.getLocale())));</span>
+<span class="fc" id="L247">		financialServiceImplValidator.isEntitiyTypeConfigIdValid(entity, entityTypeId);</span>
+<span class="fc" id="L248">		financialServiceImplValidator.isValidCreatedAt(entity, entityId);</span>
+<span class="fc" id="L249">		financialServiceImplValidator.isCountryStateNullOrNot(entity);</span>
+<span class="fc" id="L250">		financialServiceImplValidator.isValidEntity(entity, losConfig);</span>
+<span class="fc" id="L251">		financialServiceImplValidator.isValidNaicsCode(entity);</span>
+<span class="fc" id="L252">		financialServiceImplValidator.isValidRM(entity);</span>
+<span class="fc" id="L253">		return financialRepository.save(entity).getEntityId();</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

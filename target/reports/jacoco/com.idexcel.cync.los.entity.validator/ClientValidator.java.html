@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ClientValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.validator</a> &gt; <span class="el_source">ClientValidator.java</span></div><h1>ClientValidator.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.validator;
+
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.CLIENT_DETAILS_NOT_FOUND;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Service;
+
+import com.idexcel.cync.los.entity.common.utils.CommonUtils;
+import com.idexcel.cync.los.entity.dao.ClientDetailsRepository;
+import com.idexcel.cync.los.entity.exception.ResourceNotFoundException;
+import com.idexcel.cync.los.entity.model.ClientEntity;
+import com.idexcel.cync.los.entity.model.EntityRelationshipType;
+import com.idexcel.cync.los.entity.model.FinancialEntity;
+
+@Service
+public class ClientValidator {
+
+	private final ClientDetailsRepository clientDetailsRepository;
+	private final MessageSource errorMsgs;
+
+	@Autowired
+<span class="fc" id="L23">	public ClientValidator(ClientDetailsRepository clientDetailsRepository, MessageSource errorMsgs) {</span>
+<span class="fc" id="L24">		this.clientDetailsRepository = clientDetailsRepository;</span>
+<span class="fc" id="L25">		this.errorMsgs = errorMsgs;</span>
+<span class="fc" id="L26">	}</span>
+
+	public void isValidClient(EntityRelationshipType entityRelationshipType) {
+<span class="pc bpc" id="L29" title="1 of 2 branches missed.">		if (isClientExistInDb() != null) {</span>
+<span class="fc" id="L30">			entityRelationshipType.setClientDetail(isClientExistInDb());</span>
+		}
+<span class="fc" id="L32">	}</span>
+
+	public void isValidClient(FinancialEntity entity) {
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">		if (isClientExistInDb() != null) {</span>
+<span class="fc" id="L36">			entity.setClientDetail(isClientExistInDb());</span>
+		}
+<span class="fc" id="L38">	}</span>
+
+	public ClientEntity isClientExistInDb() {
+<span class="fc" id="L41">		Long clientId = CommonUtils.getClientIdFromMDC();</span>
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">		if (clientId != null) {</span>
+<span class="fc" id="L43">			return clientDetailsRepository.findById(clientId).orElseThrow(() -&gt; new ResourceNotFoundException(errorMsgs</span>
+<span class="fc" id="L44">					.getMessage(CLIENT_DETAILS_NOT_FOUND, new Object[] { clientId }, CommonUtils.getLocale())));</span>
+		}
+<span class="nc" id="L46">		return null;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

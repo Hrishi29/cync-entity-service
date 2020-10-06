@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EntityRelationshipController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.controller</a> &gt; <span class="el_source">EntityRelationshipController.java</span></div><h1>EntityRelationshipController.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.controller;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.annotation.JsonView;
+import com.idexcel.cync.los.entity.common.constants.CoreConstants;
+import com.idexcel.cync.los.entity.common.constants.LOSEntityConstants;
+import com.idexcel.cync.los.entity.common.utils.ActivityLog;
+import com.idexcel.cync.los.entity.common.utils.Operation;
+import com.idexcel.cync.los.entity.common.utils.Status;
+import com.idexcel.cync.los.entity.dao.ParentEntityNodeRepository;
+import com.idexcel.cync.los.entity.dto.EntityNodeDto;
+import com.idexcel.cync.los.entity.dto.EntityNodeSpouseDto;
+import com.idexcel.cync.los.entity.dto.EntityRelationshipBorrowerDto;
+import com.idexcel.cync.los.entity.dto.EntityRelationshipDto;
+import com.idexcel.cync.los.entity.dto.EntityRelationshipTypeDto;
+import com.idexcel.cync.los.entity.dto.ResponseDto;
+import com.idexcel.cync.los.entity.mapper.EntityRelationshipTypeMapper;
+import com.idexcel.cync.los.entity.service.EntityRelationshipTypeService;
+import com.idexcel.cync.los.entity.view.View;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+
+@RestController
+@CrossOrigin // NOSONAR
+@RequestMapping(value = CoreConstants.API_BASE_PATH + &quot;/entities/relations&quot;)
+@Api(tags = {
+		&quot;EntityRelationship Controller&quot; }, description = &quot;EntityRelationshipController : used to Manage EntityRelationship Data of LOS Entity&quot;) // NOSONAR
+class EntityRelationshipController {
+
+<span class="fc" id="L54">	private static final Logger LOG = LoggerFactory.getLogger(EntityRelationshipController.class);</span>
+	private final EntityRelationshipTypeService entityRelationshipTypeService;
+	private final EntityRelationshipTypeMapper entityRelationshipTypeMapper;
+
+	@Autowired
+	public EntityRelationshipController(EntityRelationshipTypeService entityRelationshipTypeService,
+			EntityRelationshipTypeMapper entityRelationshipTypeMapper,
+<span class="fc" id="L61">			ParentEntityNodeRepository parentEntityNodeRepository) {</span>
+<span class="fc" id="L62">		this.entityRelationshipTypeService = entityRelationshipTypeService;</span>
+<span class="fc" id="L63">		this.entityRelationshipTypeMapper = entityRelationshipTypeMapper;</span>
+<span class="fc" id="L64">	}</span>
+
+	/**
+	 * API For Creating EntityRelationship Based On EntityId.
+	 * 
+	 * @param entityRelationshipTypeDto
+	 * @param entityId
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@ApiOperation(value = &quot;${ApiOperation.EntityRelationshipController.createEntityRelationship}&quot;, response = EntityRelationshipDto.class)
+	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, value = &quot;/{entityId}&quot;)
+	public ResponseEntity&lt;ResponseDto&gt; createEntityRelation(
+			@ApiParam(value = &quot;${ApiOperation.EntityRelationshipController.createEntityRelationshipById.RelationshipDto}&quot;) @Validated @RequestBody EntityRelationshipDto entityRelationshipDto,
+			@ApiParam(required = true, name = &quot;entityId&quot;, value = &quot;${ApiOperation.EntityRelationshipController.createEntityRelationById}&quot;) @PathVariable String entityId,
+			HttpServletRequest request, HttpServletResponse response) {
+<span class="fc" id="L81">		LOG.debug(&quot;Create entity relation&quot;);</span>
+<span class="fc" id="L82">		Long relationId = entityRelationshipTypeService.saveEntityRelation(</span>
+<span class="fc" id="L83">				entityRelationshipTypeMapper.toEntityRelationshipCreteType(entityRelationshipDto), entityId);</span>
+<span class="fc" id="L84">		ResponseDto responseDto = new ResponseDto();</span>
+<span class="fc" id="L85">		responseDto.setMessage(&quot;Entity Relation Created Successfully.&quot;);</span>
+<span class="fc" id="L86">		responseDto.setId(entityId);</span>
+<span class="fc" id="L87">		LOG.info(ActivityLog.getActivityLog(null, Operation.INSERT, String.valueOf(relationId),</span>
+<span class="fc" id="L88">				&quot;Created EntityRelationship&quot;, Status.SUCCESS, request.getHeader(LOSEntityConstants.TRANSACTION_ID),</span>
+<span class="fc" id="L89">				ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L90">		return new ResponseEntity&lt;&gt;(responseDto, HttpStatus.CREATED);</span>
+	}
+
+	/**
+	 * 
+	 * API For Getting EntityRelationshipTree By entityId
+	 * 
+	 * @param request
+	 * @param response
+	 * @param entityId
+	 * @return
+	 */
+	@ApiOperation(value = &quot;${ApiOperation.EntityRelationshipController.getEntityTreeById}&quot;, response = EntityNodeDto.class)
+	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, value = &quot;tree/{entityId}&quot;)
+	@JsonView(View.EntityTreeDataView.class)
+	public ResponseEntity&lt;EntityNodeDto&gt; getEntityTreeById(HttpServletRequest request, HttpServletResponse response,
+			@ApiParam(required = true, name = &quot;entityId&quot;, value = &quot;${ApiOperation.EntityRelationshipController.getEntityById.entityId}&quot;) @PathVariable String entityId) {
+<span class="fc" id="L107">		EntityNodeDto entityNodeDto = entityRelationshipTypeMapper</span>
+<span class="fc" id="L108">				.toEntityNodeDto(entityRelationshipTypeService.findEntityRelationTreeByParentEntityId(entityId));</span>
+<span class="fc" id="L109">		LOG.info(ActivityLog.getActivityLog(null, Operation.GET, entityId, &quot;Get EntityRelationshipTree by Entity Id&quot;,</span>
+<span class="fc" id="L110">				Status.SUCCESS, request.getHeader(LOSEntityConstants.TRANSACTION_ID),</span>
+<span class="fc" id="L111">				ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L112">		return new ResponseEntity&lt;&gt;(entityNodeDto, HttpStatus.OK);</span>
+	}
+
+	/**
+	 * 
+	 * API For Getting EntityRelationshipTree Spouse By entityId
+	 * 
+	 * @param request
+	 * @param response
+	 * @param entityId
+	 * @return
+	 */
+	@ApiOperation(value = &quot;${ApiOperation.EntityRelationshipController.getEntityTreeById}&quot;, response = EntityNodeDto.class)
+	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, value = &quot;spouse/{entityId}&quot;)
+	public ResponseEntity&lt;EntityNodeSpouseDto&gt; getEntitySpouse(HttpServletRequest request, HttpServletResponse response,
+			@ApiParam(required = true, name = &quot;entityId&quot;, value = &quot;${ApiOperation.EntityRelationshipController.getEntityById.entityId}&quot;) @PathVariable String entityId) {
+<span class="fc" id="L128">		LOG.info(&quot;Inside getEntitySpouse with entity ID as ::::::: {}&quot;, entityId);</span>
+<span class="fc" id="L129">		EntityNodeSpouseDto spouseData = entityRelationshipTypeService.findSpouse(entityId);</span>
+<span class="fc" id="L130">		LOG.info(ActivityLog.getActivityLog(null, Operation.GET, entityId, &quot;Get Spouse by Entity Id&quot;, Status.SUCCESS,</span>
+<span class="fc" id="L131">				request.getHeader(LOSEntityConstants.TRANSACTION_ID), ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L132">		return new ResponseEntity&lt;&gt;(spouseData, HttpStatus.OK);</span>
+	}
+
+	/**
+	 * API For Getting List Of EntityRelationship By entityId
+	 * 
+	 * @param request
+	 * @param response
+	 * @param entityId
+	 * @return
+	 */
+	@ApiOperation(value = &quot;${ApiOperation.EntityRelationshipController.getEntityListById}&quot;, response = EntityRelationshipTypeDto.class)
+	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, value = &quot;/{entityId}&quot;)
+	@JsonView(View.EntityRelationListView.class)
+	public ResponseEntity&lt;List&lt;EntityRelationshipTypeDto&gt;&gt; getEntityListById(HttpServletRequest request,
+			HttpServletResponse response,
+			@ApiParam(required = true, name = &quot;entityId&quot;, value = &quot;${ApiOperation.EntityRelationshipController.getEntityListById.entityId}&quot;) @PathVariable String entityId) {
+<span class="fc" id="L149">		List&lt;EntityRelationshipTypeDto&gt; entityRelationshipTypeDto = entityRelationshipTypeMapper</span>
+<span class="fc" id="L150">				.toEntityRelationshipTypeDto(entityRelationshipTypeService.findEntityRelationListByEntityId(entityId));</span>
+<span class="fc" id="L151">		LOG.info(ActivityLog.getActivityLog(null, Operation.GET, entityId, &quot;Get EntityRelationship List by Entity Id&quot;,</span>
+<span class="fc" id="L152">				Status.SUCCESS, request.getHeader(LOSEntityConstants.TRANSACTION_ID),</span>
+<span class="fc" id="L153">				ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L154">		return new ResponseEntity&lt;&gt;(entityRelationshipTypeDto, HttpStatus.OK);</span>
+	}
+
+	/**
+	 * API For Updating EntityRelationship By entityId
+	 * 
+	 * @param request
+	 * @param response
+	 * @param entityRelationshipTypeDto
+	 * @param id
+	 * @return
+	 */
+	@ApiOperation(value = &quot;${ApiOperation.EntityRelationshipController.updateEntityRelationById}&quot;, response = EntityRelationshipDto.class)
+	@PutMapping(produces = MediaType.APPLICATION_JSON_VALUE, value = &quot;/{id}&quot;)
+	public ResponseEntity&lt;ResponseDto&gt; updateEntityRelationById(HttpServletRequest request,
+			HttpServletResponse response,
+			@ApiParam(value = &quot;${ApiOperation.EntityRelationshipController.updateEntityRelationById.RelationshipDto}&quot;) @Validated @RequestBody EntityRelationshipDto ntityRelationshipDto,
+			@ApiParam(required = true, name = &quot;id&quot;, value = &quot;${ApiOperation.EntityRelationshipController.updateEntityRelationById.id}&quot;) @PathVariable Long id) {
+<span class="fc" id="L172">		entityRelationshipTypeService.updateEntityRelaton(id,</span>
+<span class="fc" id="L173">				entityRelationshipTypeMapper.toEntityRelationshipCreteType(ntityRelationshipDto));</span>
+<span class="fc" id="L174">		ResponseDto responseDto = new ResponseDto();</span>
+<span class="fc" id="L175">		responseDto.setMessage(&quot;Entity Relationship Updated Successfully.&quot;);</span>
+<span class="fc" id="L176">		responseDto.setId(String.valueOf(id));</span>
+<span class="fc" id="L177">		LOG.info(ActivityLog.getActivityLog(null, Operation.UPDATE, String.valueOf(id),</span>
+				&quot;Updated EntityRelationship by Relation Id&quot;, Status.SUCCESS,
+<span class="fc" id="L179">				request.getHeader(LOSEntityConstants.TRANSACTION_ID), ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L180">		return new ResponseEntity&lt;&gt;(responseDto, HttpStatus.OK);</span>
+	}
+
+	/**
+	 * API For Delete EntityRelation By RelationId
+	 * 
+	 * @param request
+	 * @param response
+	 * @param id
+	 * @return
+	 */
+	@ApiOperation(value = &quot;${ApiOperation.EntityRelationshipController.deleteEntityRelationById}&quot;)
+	@DeleteMapping(produces = MediaType.APPLICATION_JSON_VALUE, value = &quot;/{id}&quot;)
+	public ResponseEntity&lt;ResponseDto&gt; deleteEntityRelationById(HttpServletRequest request,
+			HttpServletResponse response,
+			@ApiParam(required = true, name = &quot;id&quot;, value = &quot;${ApiOperation.EntityRelationshipController.deleteEntityRelationById.id}&quot;) @PathVariable Long id) {
+<span class="fc" id="L196">		entityRelationshipTypeService.deleteEntityRelation(id);</span>
+<span class="fc" id="L197">		ResponseDto responseDto = new ResponseDto();</span>
+<span class="fc" id="L198">		responseDto.setMessage(&quot;Entity Relationship Deleted Successfully.&quot;);</span>
+<span class="fc" id="L199">		responseDto.setId(String.valueOf(id));</span>
+<span class="fc" id="L200">		LOG.info(ActivityLog.getActivityLog(null, Operation.DELETE, String.valueOf(id),</span>
+				&quot;Deleted EntityRelationship by Relation Id&quot;, Status.SUCCESS,
+<span class="fc" id="L202">				request.getHeader(LOSEntityConstants.TRANSACTION_ID), ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L203">		return new ResponseEntity&lt;&gt;(responseDto, HttpStatus.NO_CONTENT);</span>
+	}
+
+	/**
+	 * API for Getting RelationshipList for given Borrower's
+	 * 
+	 * @param request
+	 * @param response
+	 * @param entityIds
+	 * @return
+	 */
+	@ApiOperation(value = &quot;${ApiOperation.EntityRelationshipController.getBorowersList}&quot;, response = EntityRelationshipBorrowerDto.class)
+	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, value = &quot;/borrowers&quot;)
+	public ResponseEntity&lt;List&lt;EntityRelationshipBorrowerDto&gt;&gt; getEntityRelationsListByIds(HttpServletRequest request,
+			HttpServletResponse response,
+			@ApiParam(required = true, name = &quot;entityId&quot;, value = &quot;${ApiOperation.EntityRelationshipController.getEntityListById.entityId}&quot;) @RequestBody List&lt;String&gt; entityIds) {
+<span class="fc" id="L219">		List&lt;EntityRelationshipBorrowerDto&gt; entityRelationshipTypeDto = entityRelationshipTypeMapper</span>
+<span class="fc" id="L220">				.toEntityRelationshipBorrowerDto(entityRelationshipTypeService.findEntityRelationsListByIds(entityIds));</span>
+<span class="fc" id="L221">		LOG.info(ActivityLog.getActivityLog(null, Operation.GET, entityIds.stream().collect(Collectors.joining(&quot;,&quot;)),</span>
+				&quot;Getting RelationshipList for given Borrower's&quot;, Status.SUCCESS,
+<span class="fc" id="L223">				request.getHeader(LOSEntityConstants.TRANSACTION_ID), ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L224">		return new ResponseEntity&lt;&gt;(entityRelationshipTypeDto, HttpStatus.OK);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

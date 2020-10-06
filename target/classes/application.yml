@@ -1,0 +1,310 @@
+server:
+      port: 8083  
+      
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*" 
+
+spring:
+      autoconfigure:
+          exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      
+      profiles: local
+      servlet:
+         multipart:
+            max-file-size: 10MB
+            max-request-size: 10MB
+      multitenancy:
+            datasources:
+                    driver-class-name: org.postgresql.Driver
+                    url: jdbc:postgresql://localhost:5432
+                    username: postgres
+                    password: postgres
+                    timeZone: Asia/Kolkata
+                    connectionPoolSize: 10    
+    
+      flyway:
+       
+          url: jdbc:postgresql://localhost:5432/postgres
+          schemas: enty
+          user: postgres
+          password: root
+          locations: classpath:/db/migration
+          baselineOnMigrate: true
+       
+      jackson:
+#              date-format: com.fasterxml.jackson.databind.util.ISO8601DateFormat 
+              date-format: yyyy-MM-dd HH:mm:ss
+              deserialization:
+                           fail-on-unknown-properties: true
+              serialization:
+                           fail-on-empty-beans: false
+      http:
+            log-request-details: true  
+      jpa: 
+            database: POSTGRESQL
+            database-platform: org.hibernate.dialect.PostgreSQLDialect
+            properties: 
+                          hibernate:
+                              generate_statistics: true   
+                              format_sql: true  
+                              default_schema: enty
+                              temp.use_jdbc_metadata_defaults: false
+                              jdbc: 
+                                   time_zone: UTC
+                              show-sql: true
+ 
+logging:
+       file: "/opt/cync_los_entity_service/logs/los_entity_service.log"
+       level:
+             com.idexcel.cync.los.entity: TRACE
+             org.springframework: INFO
+             org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: OFF
+       pattern:
+               console: "%date{ISO8601} [%.36X{lenderName}-%.36X{TransactionId}] %-5level - %-35c{5} - %msg%n%r"
+               file: "%date{ISO8601} [%.36X{lenderName}-%.36X{TransactionId}] %-5level - %-35c{5} - %msg%n%r"
+            
+swagger:
+   allowed:
+      profiles: local
+   specs[0]:
+      name: local
+      protocal: http
+#log4j.logger.io.swagger.models.parameters.AbstractSerializableParameter=error
+
+---
+spring:
+      autoconfigure:
+          exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      
+      profiles: dev
+      servlet:
+         multipart:
+            max-file-size: 10MB
+            max-request-size: 10MB
+            
+            
+      multitenancy:      
+              datasources:
+                    driver-class-name: org.postgresql.Driver
+                    url: jdbc:postgresql://${DB_ENDPOINT}:${DB_PORT}
+                    username: ${DB_USER}
+                    password: ${DB_PASSWORD} 
+                    timeZone: Asia/Kolkata
+                    connectionPoolSize: 10 
+      
+      jackson:
+#              date-format: com.fasterxml.jackson.databind.util.ISO8601DateFormat 
+              date-format: yyyy-MM-dd HH:mm:ss
+              deserialization:
+                           fail-on-unknown-properties: true
+              serialization:
+                           fail-on-empty-beans: false
+      http:
+            log-request-details: true  
+      jpa: 
+            database: POSTGRESQL
+            database-platform: org.hibernate.dialect.PostgreSQLDialect
+            properties: 
+                          hibernate:
+                              generate_statistics: false   
+                              format_sql: false  
+                              default_schema: enty
+                              temp.use_jdbc_metadata_defaults: false
+            show-sql: false
+ 
+logging:
+       file: "/opt/cync_los_entity_service/logs/los_entity_service.log"
+       level:
+             com.idexcel.cync.los.entity: TRACE
+             org.springframework: INFO
+             org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: OFF
+       pattern:
+               console: "%date{ISO8601} [%.36X{lenderName}-%.36X{TransactionId}] %-5level - %-35c{5} - %msg%n%r"
+               file: "%date{ISO8601} [%.36X{lenderName}-%.36X{TransactionId}] %-5level - %-35c{5} - %msg%n%r"
+            
+swagger:
+   allowed:
+      profiles: dev
+   specs[0]:
+      name: dev
+      host: ${API_DOMAIN}/entity
+      protocal: https
+---
+spring:
+      autoconfigure:
+          exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      
+      profiles: test
+      servlet:
+         multipart:
+            max-file-size: 10MB
+            max-request-size: 10MB
+            
+            
+      multitenancy:      
+              datasources:
+                    driver-class-name: org.postgresql.Driver
+                    url: jdbc:postgresql://${DB_ENDPOINT}:${DB_PORT}
+                    username: ${DB_USER}
+                    password: ${DB_PASSWORD} 
+                    timeZone: Asia/Kolkata
+                    connectionPoolSize: 10 
+      
+      jackson:
+#              date-format: com.fasterxml.jackson.databind.util.ISO8601DateFormat 
+              date-format: yyyy-MM-dd HH:mm:ss
+              deserialization:
+                           fail-on-unknown-properties: true
+              serialization:
+                           fail-on-empty-beans: false
+      http:
+            log-request-details: true  
+      jpa: 
+            database: POSTGRESQL
+            database-platform: org.hibernate.dialect.PostgreSQLDialect
+            properties: 
+                          hibernate:
+                              generate_statistics: false   
+                              format_sql: false  
+                              default_schema: enty
+                              temp.use_jdbc_metadata_defaults: false
+            show-sql: false
+ 
+logging:
+       file: "/opt/cync_los_entity_service/logs/los_entity_service.log"
+       level:
+             com.idexcel.cync.los.entity: TRACE
+             org.springframework: INFO
+             org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: OFF
+       pattern:
+               console: "%date{ISO8601} [%.36X{lenderName}-%.36X{TransactionId}] %-5level - %-35c{5} - %msg%n%r"
+               file: "%date{ISO8601} [%.36X{lenderName}-%.36X{TransactionId}] %-5level - %-35c{5} - %msg%n%r"
+            
+swagger:
+   allowed:
+      profiles: test
+   specs[0]:
+      name: test
+      host: ${API_DOMAIN}/entity
+      protocal: https
+
+---
+
+spring:
+      autoconfigure:
+          exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      
+      profiles: demo
+      servlet:
+         multipart:
+            max-file-size: 10MB
+            max-request-size: 10MB
+      multitenancy:      
+            datasources:
+                    driver-class-name: org.postgresql.Driver
+                    url: jdbc:postgresql://${DB_ENDPOINT}:${DB_PORT}
+                    username: ${DB_USER}
+                    password: ${DB_PASSWORD} 
+                    timeZone: Asia/Kolkata
+                    connectionPoolSize: 10 
+      
+      jackson:
+#              date-format: com.fasterxml.jackson.databind.util.ISO8601DateFormat 
+              date-format: yyyy-MM-dd HH:mm:ss
+              deserialization:
+                           fail-on-unknown-properties: true
+              serialization:
+                           fail-on-empty-beans: false
+      http:
+            log-request-details: true  
+      jpa: 
+            database: POSTGRESQL
+            database-platform: org.hibernate.dialect.PostgreSQLDialect
+            properties: 
+                          hibernate:
+                              generate_statistics: false   
+                              format_sql: false  
+                              default_schema: enty
+                              temp.use_jdbc_metadata_defaults: false
+            show-sql: false
+ 
+logging:
+       file: "/opt/cync_los_entity_service/logs/los_entity_service.log"
+       level:
+             com.idexcel.cync.los.entity: TRACE
+             org.springframework: INFO
+             org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: OFF
+       pattern:
+               console: "%date{ISO8601} [%.36X{lenderName}-%.36X{TransactionId}] %-5level - %-35c{5} - %msg%n%r"
+               file: "%date{ISO8601} [%.36X{lenderName}-%.36X{TransactionId}] %-5level - %-35c{5} - %msg%n%r"
+swagger:
+   allowed:
+      profiles: dev
+   specs[0]:
+      name: demo
+      host: ${API_DOMAIN}/entity
+      protocal: https
+---
+spring:
+      autoconfigure:
+          exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      
+      profiles: prod
+      servlet:
+         multipart:
+            max-file-size: 10MB
+            max-request-size: 10MB
+            
+            
+      multitenancy:      
+              datasources:
+                    driver-class-name: org.postgresql.Driver
+                    url: jdbc:postgresql://${DB_ENDPOINT}:${DB_PORT}
+                    username: ${DB_USER}
+                    password: ${DB_PASSWORD} 
+                    timeZone: Asia/Kolkata
+                    connectionPoolSize: 10   
+     
+       
+      
+      jackson:
+#              date-format: com.fasterxml.jackson.databind.util.ISO8601DateFormat 
+              date-format: yyyy-MM-dd HH:mm:ss
+              deserialization:
+                           fail-on-unknown-properties: true
+              serialization:
+                           fail-on-empty-beans: false
+      http:
+            log-request-details: true  
+      jpa: 
+            database: POSTGRESQL
+            database-platform: org.hibernate.dialect.PostgreSQLDialect
+            properties: 
+                          hibernate:
+                              generate_statistics: false   
+                              format_sql: false  
+                              default_schema: enty
+                              temp.use_jdbc_metadata_defaults: false
+            show-sql: false
+ 
+logging:
+       file: "/opt/cync_los_entity_service/logs/los_entity_service.log"
+       level:
+             com.idexcel.cync.los.entity: TRACE
+             org.springframework: INFO
+             org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: OFF
+       pattern:
+               console: "%date{ISO8601} [%.36X{lenderName}-%.36X{TransactionId}] %-5level - %-35c{5} - %msg%n%r"
+               file: "%date{ISO8601} [%.36X{lenderName}-%.36X{TransactionId}] %-5level - %-35c{5} - %msg%n%r"
+swagger:
+   allowed:
+      profiles: dev
+   specs[0]:
+      name: demo
+      host: ${API_DOMAIN}/entity
+      protocal: https
+
+

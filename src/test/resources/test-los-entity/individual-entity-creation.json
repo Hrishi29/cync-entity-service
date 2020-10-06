@@ -1,0 +1,33 @@
+{
+  "address": "Bangalore",
+  "city": "Bangalore",
+  "country": {
+    "countryId": 4000023,
+    "countryCode": "USA",
+    "countryName": "United States"
+  },
+  "dateOfBirth": "06/30/1995",
+  "email": "test@g.com",
+  "entityTypeConfig": {
+    "configId": 3000001,
+    "configCode": "INDIVIDUAL",
+    "configtypeId": 2000003,
+    "configtypeCode": "ENTITY",
+    "configValue": "Individual Entity"
+  },
+  "firstName": "fName",
+  "lastName": "lName",
+  "map": null,
+  "middleName": "m",
+  "notes": "string",
+  "phone": "1234567890",
+  "relationshipManagerEmail": null,
+  "state": {
+    "stateId": 5000010,
+    "countryId": 4000023,
+    "stateCode": "GA",
+    "stateName": "Georgia"
+  },
+  "status": true,
+  "zipCode": "12345-6789"
+}

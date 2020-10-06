@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EntityFieldsServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.service.impl</a> &gt; <span class="el_source">EntityFieldsServiceImpl.java</span></div><h1>EntityFieldsServiceImpl.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.service.impl;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import com.idexcel.cync.los.entity.dto.CommercialEntityDto;
+import com.idexcel.cync.los.entity.dto.EntityFieldNameValue;
+import com.idexcel.cync.los.entity.dto.FinancialEntityDto;
+import com.idexcel.cync.los.entity.dto.IndividualEntityDto;
+import com.idexcel.cync.los.entity.dto.NaicsDto;
+import com.idexcel.cync.los.entity.model.CountryLookup;
+import com.idexcel.cync.los.entity.model.LosConfigDetails;
+import com.idexcel.cync.los.entity.model.StateLookup;
+import com.idexcel.cync.los.entity.service.EntityFieldsService;
+
+@Service
+<span class="fc" id="L26">public class EntityFieldsServiceImpl implements EntityFieldsService {</span>
+	
+<span class="fc" id="L28">	List&lt;Field[]&gt; fieldList = Arrays.asList(CommercialEntityDto.class.getDeclaredFields(),</span>
+<span class="fc" id="L29">			IndividualEntityDto.class.getDeclaredFields(), FinancialEntityDto.class.getDeclaredFields(),</span>
+<span class="fc" id="L30">			CountryLookup.class.getDeclaredFields(), StateLookup.class.getDeclaredFields(),</span>
+<span class="fc" id="L31">			LosConfigDetails.class.getDeclaredFields(), NaicsDto.class.getDeclaredFields());</span>
+
+	/**
+	 * Method to Get All the Declared fields in the respective Classes.
+	 */
+	@Override
+	public List&lt;EntityFieldNameValue&gt; getEntityFields() {
+<span class="fc" id="L38">		Map&lt;String, EntityFieldNameValue&gt; hashMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L39">		fieldList.parallelStream().forEachOrdered(fieldArray -&gt; {</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">			for (Field field : fieldArray) {</span>
+<span class="fc" id="L41">				addToList(field, hashMap);</span>
+			}
+<span class="fc" id="L43">		});</span>
+<span class="fc" id="L44">		List&lt;EntityFieldNameValue&gt; list = new ArrayList&lt;&gt;(hashMap.values());</span>
+<span class="fc" id="L45">		list.sort(</span>
+<span class="fc" id="L46">				(EntityFieldNameValue f1, EntityFieldNameValue f2) -&gt; f1.getFieldValue().compareTo(f2.getFieldValue()));</span>
+<span class="fc" id="L47">		return list;</span>
+	}
+
+	/**
+	 * Method to Filter the unwanted fieldNames for RiskRating and capitalizing the
+	 * initial character.
+	 * 
+	 * @param field
+	 * @param hashMap
+	 */
+	private void addToList(Field field, Map&lt;String, EntityFieldNameValue&gt; hashMap) {
+<span class="fc" id="L58">		List&lt;String&gt; unwantedFields = Arrays.asList(&quot;serialVersionUID&quot;, &quot;relationshipManagerId&quot;, &quot;status&quot;, &quot;createdAt&quot;,</span>
+				&quot;createdBy&quot;, &quot;modifiedBy&quot;, &quot;modifiedAt&quot;, &quot;map&quot;, &quot;audit&quot;, &quot;rmObject&quot;, &quot;notes&quot;, &quot;phone&quot;, &quot;email&quot;,
+				&quot;entityTypeConfig&quot;, &quot;businessType&quot;, &quot;countryLookup&quot;, &quot;country&quot;, &quot;countryId&quot;, &quot;state&quot;, &quot;stateId&quot;,
+				&quot;configtypeId&quot;, &quot;configId&quot;, &quot;naics&quot;, &quot;naicsCodeId&quot;);
+<span class="fc bfc" id="L62" title="All 2 branches covered.">		if (!unwantedFields.contains(field.getName())</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">				&amp;&amp; !hashMap.containsKey(addspace(StringUtils.capitalize(field.getName())))) {</span>
+<span class="fc" id="L64">			EntityFieldNameValue entityFieldNameValue = new EntityFieldNameValue();</span>
+<span class="fc" id="L65">			entityFieldNameValue.setFieldName(addspace(StringUtils.capitalize(field.getName())));</span>
+<span class="fc" id="L66">			entityFieldNameValue.setFieldValue(field.getName());</span>
+<span class="fc" id="L67">			hashMap.put(entityFieldNameValue.getFieldName(), entityFieldNameValue);</span>
+		}
+<span class="fc" id="L69">	}</span>
+
+	/**
+	 * Method to add space in front of Capital Letters present in entityFieldName
+	 * 
+	 * @param entityFieldName
+	 * @return
+	 */
+	private String addspace(String entityFieldName) {
+<span class="fc" id="L78">		StringBuilder out = new StringBuilder(entityFieldName);</span>
+<span class="fc" id="L79">		Matcher m = Pattern.compile(&quot;[A-Z]&quot;).matcher(entityFieldName);</span>
+<span class="fc" id="L80">		int addSpace = 0;</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">		while (m.find()) {</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">			if (m.start() != 0) {</span>
+<span class="fc" id="L83">				out = out.insert(m.start() + addSpace, &quot; &quot;);</span>
+<span class="fc" id="L84">				addSpace++;</span>
+			}
+		}
+<span class="fc" id="L87">		return out.toString();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

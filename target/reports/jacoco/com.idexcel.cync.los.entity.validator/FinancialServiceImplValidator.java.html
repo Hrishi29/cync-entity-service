@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FinancialServiceImplValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.validator</a> &gt; <span class="el_source">FinancialServiceImplValidator.java</span></div><h1>FinancialServiceImplValidator.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.validator;
+
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.INVALID_BUSINESS_OPEN_DATE;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.INVALID_DATE_OF_BIRTH;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.INVALID_ENTITY_TYPE_ID;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.INVALID_NAICS_CODE_ID;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.MISMATCH_CONFIG_ID;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Optional;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import com.idexcel.cync.los.entity.common.constants.CoreConstants;
+import com.idexcel.cync.los.entity.common.constants.LOSEntityConstants;
+import com.idexcel.cync.los.entity.common.utils.ActivityLog;
+import com.idexcel.cync.los.entity.common.utils.CommonUtils;
+import com.idexcel.cync.los.entity.common.utils.ExternalAPICaller;
+import com.idexcel.cync.los.entity.common.utils.Operation;
+import com.idexcel.cync.los.entity.common.utils.Status;
+import com.idexcel.cync.los.entity.dao.ConfigLookupRepository;
+import com.idexcel.cync.los.entity.dao.FinancialRepository;
+import com.idexcel.cync.los.entity.exception.BadRequestException;
+import com.idexcel.cync.los.entity.model.CommercialEntity;
+import com.idexcel.cync.los.entity.model.FinancialEntity;
+import com.idexcel.cync.los.entity.model.IndividualFinancialEntity;
+import com.idexcel.cync.los.entity.model.LosConfig;
+import com.idexcel.cync.los.entity.model.LosConfigDetails;
+
+@Service
+public class FinancialServiceImplValidator {
+
+<span class="fc" id="L42">	private static final Logger LOG = LoggerFactory.getLogger(FinancialServiceImplValidator.class);</span>
+	private final MessageSource errorMsgs;
+	private FinancialRepository financialRepository;
+	private ConfigLookupRepository configLookupRepository;
+	private ClientValidator clientValidator;
+	private FSCountryStateValidator fSCountryStateValidator;
+
+	@Autowired
+	public FinancialServiceImplValidator(FinancialRepository financialRepository,
+			ConfigLookupRepository configLookupRepository, ClientValidator clientValidator,
+<span class="fc" id="L52">			FSCountryStateValidator fSCountryStateValidator, MessageSource errorMsgs) {</span>
+<span class="fc" id="L53">		this.errorMsgs = errorMsgs;</span>
+<span class="fc" id="L54">		this.financialRepository = financialRepository;</span>
+<span class="fc" id="L55">		this.configLookupRepository = configLookupRepository;</span>
+<span class="fc" id="L56">		this.clientValidator = clientValidator;</span>
+<span class="fc" id="L57">		this.fSCountryStateValidator = fSCountryStateValidator;</span>
+<span class="fc" id="L58">	}</span>
+
+	/**
+	 * Method To validate Is Entity(Commercial/Individual)
+	 * 
+	 * @param entity
+	 * @param losConfig
+	 */
+	public void isValidEntity(FinancialEntity entity, LosConfig losConfig) {
+<span class="fc" id="L67">		Date date = new Date();</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">		if (entity instanceof CommercialEntity</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">				&amp;&amp; losConfig.getConfigCode().equals(LOSEntityConstants.COMMERCIAL_CONFIG_CODE)) {</span>
+<span class="fc" id="L70">			isBusinessTypePresent(entity);</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">			if ((((CommercialEntity) entity).getBusinessOpenDate() != null)</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">					&amp;&amp; ((CommercialEntity) entity).getBusinessOpenDate().compareTo(date) &gt;= 0) {</span>
+<span class="fc" id="L73">				LOG.info(ActivityLog.getActivityLog(null, Operation.INSERT_OR_UPDATE, null,</span>
+						&quot;Entered BusinessOpenDate greater than today's date&quot;, Status.ERROR, null,
+<span class="fc" id="L75">						ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L76">				throw new BadRequestException(</span>
+<span class="fc" id="L77">						errorMsgs.getMessage(INVALID_BUSINESS_OPEN_DATE, null, CommonUtils.getLocale()));</span>
+			}
+<span class="fc bfc" id="L79" title="All 2 branches covered.">		} else if (entity instanceof IndividualFinancialEntity</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">				&amp;&amp; losConfig.getConfigCode().equals(LOSEntityConstants.INDIVIDUAL_CONFIG_CODE)) {</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">			if ((((IndividualFinancialEntity) entity).getDateOfBirth() != null)</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">					&amp;&amp; ((IndividualFinancialEntity) entity).getDateOfBirth().compareTo(date) &gt;= 0) {</span>
+<span class="fc" id="L83">				LOG.info(ActivityLog.getActivityLog(null, Operation.INSERT_OR_UPDATE, null,</span>
+						&quot;Entered DateOfBirth greater than today's date&quot;, Status.ERROR, null,
+<span class="fc" id="L85">						ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L86">				throw new BadRequestException(</span>
+<span class="fc" id="L87">						errorMsgs.getMessage(INVALID_DATE_OF_BIRTH, null, CommonUtils.getLocale()));</span>
+			}
+		} else {
+<span class="fc" id="L90">			LOG.debug(&quot;invalid EntityTypeId in isValidEntity method &quot;);</span>
+<span class="fc" id="L91">			LOG.info(ActivityLog.getActivityLog(null, Operation.INSERT_OR_UPDATE, null, &quot;Entered Invalid EntityTypeId&quot;,</span>
+<span class="fc" id="L92">					Status.ERROR, null, ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L93">			throw new BadRequestException(errorMsgs.getMessage(INVALID_ENTITY_TYPE_ID, null, CommonUtils.getLocale()));</span>
+		}
+<span class="fc" id="L95">	}</span>
+
+	/**
+	 * Method To validate the Relationship Manager Id Exist/ valid exchanging the
+	 * data form AdminMicroservice
+	 * 
+	 * @param entity
+	 */
+	public void isValidRM(FinancialEntity entity) {
+<span class="fc" id="L104">		ExternalAPICaller externalAPICaller = new ExternalAPICaller();</span>
+<span class="fc bfc" id="L105" title="All 4 branches covered.">		if (entity.getRelationshipManagerEmail() == null || entity.getRelationshipManagerEmail().isEmpty()) {</span>
+<span class="fc" id="L106">			entity.setRelationshipManagerEmail(null);</span>
+<span class="pc bpc" id="L107" title="2 of 4 branches missed.">		} else if (!entity.getRelationshipManagerEmail().isEmpty() &amp;&amp; entity.getRelationshipManagerEmail() != null) {</span>
+<span class="fc" id="L108">			ResponseEntity&lt;Object&gt; responseEntity = externalAPICaller.post(CoreConstants.ADMIN_POST_USER_URL,</span>
+<span class="fc" id="L109">					Arrays.asList(entity.getRelationshipManagerEmail()));</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">			if ((responseEntity.getBody().equals(Arrays.asList()))</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">					|| responseEntity.getStatusCodeValue() == HttpStatus.BAD_REQUEST.value()) {</span>
+<span class="nc" id="L112">				LOG.info(ActivityLog.getActivityLog(null, Operation.INSERT_OR_UPDATE, null,</span>
+<span class="nc" id="L113">						&quot;Entered Invalid RelationshipManagerEmail :&quot; + entity.getRelationshipManagerEmail(),</span>
+<span class="nc" id="L114">						Status.ERROR, null, ActivityLog.localDateTimeInUTC()));</span>
+<span class="nc" id="L115">				throw new BadRequestException(</span>
+<span class="nc" id="L116">						&quot;Invalid RelationshipManagerEmail : &quot; + entity.getRelationshipManagerEmail());</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">			} else if (responseEntity.getStatusCodeValue() &gt; HttpStatus.OK.value()) {</span>
+<span class="fc" id="L118">				LOG.info(&quot;ErrorCode: {} &quot;,responseEntity.getStatusCodeValue());</span>
+<span class="fc" id="L119">				throw new BadRequestException(&quot;Error while calling RelationshipManager from External API&quot;);</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			} else if (responseEntity.getStatusCodeValue() == HttpStatus.OK.value()) {</span>
+<span class="nc" id="L121">				isValidRoleForRelationshipManager(responseEntity);</span>
+			}
+		}
+<span class="fc" id="L124">	}</span>
+
+	/**
+	 * Method To validate the Relationship Manager Role allow only Loan Officer,
+	 * Credit Analyst, Portfolio Manager
+	 * 
+	 * @param responseEntity
+	 */
+	public void isValidRoleForRelationshipManager(ResponseEntity&lt;Object&gt; responseEntity) {
+<span class="fc" id="L133">		JSONArray array = new JSONObject(responseEntity).getJSONArray(&quot;body&quot;);</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">		for (int i = 0; i &lt; array.length(); i++) {</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">			if (array.getJSONObject(i).getBoolean(&quot;isActive&quot;) == Boolean.TRUE) {</span>
+<span class="fc" id="L136">				JSONObject role = (JSONObject) array.getJSONObject(i).get(&quot;role&quot;);</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">				if ((role.get(&quot;isBase&quot;) == Boolean.TRUE</span>
+<span class="fc" id="L138">						&amp;&amp; !(Arrays.asList(&quot;Loan Officer&quot;, &quot;Credit Analyst&quot;, &quot;Portfolio Manager&quot;)</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">								.contains(role.get(&quot;name&quot;)))</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">						|| (role.get(&quot;isBase&quot;) == Boolean.FALSE</span>
+<span class="fc" id="L141">								&amp;&amp; !(Arrays.asList(&quot;Loan Officer&quot;, &quot;Credit Analyst&quot;, &quot;Portfolio Manager&quot;)</span>
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">										.contains(role.get(&quot;baseRole&quot;)))))) {</span>
+<span class="fc" id="L143">					LOG.info(ActivityLog.getActivityLog(null, Operation.INSERT_OR_UPDATE, null,</span>
+							&quot;Entered invalid role of RelationshipManagerEmail&quot;, Status.ERROR, null,
+<span class="fc" id="L145">							ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L146">					throw new BadRequestException(</span>
+<span class="fc" id="L147">							&quot;RelationshipManager's emailId, having Role:&quot; + role.get(&quot;name&quot;) + &quot; is Not Permitted &quot;);</span>
+				}
+<span class="fc" id="L149">			} else {</span>
+<span class="fc" id="L150">				throw new BadRequestException(&quot;Please check the status of RelationshipManager &quot;);</span>
+			}
+		}
+<span class="fc" id="L153">	}</span>
+
+	/**
+	 * Method to Validate NaicsCode Present in SeedData
+	 * 
+	 * @param entity
+	 */
+	public void isValidNaicsCode(FinancialEntity entity) {
+<span class="fc bfc" id="L161" title="All 2 branches covered.">		if (entity instanceof CommercialEntity) {</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">			if (((CommercialEntity) entity).getNaics() == null</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">					|| ((CommercialEntity) entity).getNaics().getConfigId() == null) {</span>
+<span class="fc" id="L164">				((CommercialEntity) entity).setNaics(null);</span>
+			} else {
+<span class="fc" id="L166">				Long naicsCodeId = ((CommercialEntity) entity).getNaics().getConfigId();</span>
+<span class="fc" id="L167">				LosConfigDetails naicsCode = configLookupRepository.findById(naicsCodeId)</span>
+<span class="fc" id="L168">						.orElseThrow(() -&gt; new BadRequestException(errorMsgs.getMessage(INVALID_NAICS_CODE_ID,</span>
+<span class="fc" id="L169">								new Object[] { String.valueOf(naicsCodeId) }, CommonUtils.getLocale())));</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">				if (!naicsCode.getConfigtypeCode().equals(LOSEntityConstants.NAICS_CODE)) {</span>
+<span class="fc" id="L171">					LOG.info(ActivityLog.getActivityLog(null, Operation.INSERT_OR_UPDATE, null,</span>
+<span class="fc" id="L172">							&quot;Entered invalid NAICS Code&quot;, Status.ERROR, null, ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L173">					throw new BadRequestException(&quot;Please enter valid NAICS Code&quot;);</span>
+				}
+			}
+		}
+<span class="fc" id="L177">	}</span>
+
+	/**
+	 * ` Method to Validate BusinessTypeId
+	 * 
+	 * @param entity
+	 */
+	public void isBusinessTypePresent(FinancialEntity entity) {
+<span class="fc" id="L185">		CommercialEntity commercialEntity = (CommercialEntity) entity;</span>
+<span class="fc bfc" id="L186" title="All 4 branches covered.">		if ((commercialEntity.getBusinessType() == null) || commercialEntity.getBusinessType().getConfigId() == null) {</span>
+<span class="fc" id="L187">			commercialEntity.setBusinessType(null);</span>
+		} else {
+<span class="fc" id="L189">			Long businesstypeId = commercialEntity.getBusinessType().getConfigId();</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">			if (businesstypeId != 0) {</span>
+<span class="fc" id="L191">				Optional&lt;LosConfigDetails&gt; losConfigBusinessTypeDetails = configLookupRepository</span>
+<span class="fc" id="L192">						.findById(businesstypeId);</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">				if ((!losConfigBusinessTypeDetails.isPresent()) || (!losConfigBusinessTypeDetails.get()</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">						.getConfigtypeCode().equals(LOSEntityConstants.BUSINESS_TYPE))) {</span>
+<span class="fc" id="L195">					LOG.info(ActivityLog.getActivityLog(null, Operation.INSERT_OR_UPDATE, null,</span>
+<span class="fc" id="L196">							&quot;Entered invalid BusinessTypeId&quot;, Status.ERROR, null, ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L197">					throw new BadRequestException(&quot;Invalid BusinessTypeId:&quot; + businesstypeId);</span>
+				}
+<span class="fc" id="L199">			} else {</span>
+<span class="fc" id="L200">				throw new BadRequestException(&quot;Invalid BusinessTypeId:&quot; + businesstypeId);</span>
+			}
+		}
+<span class="fc" id="L203">	}</span>
+
+	/**
+	 * Method To validate CreatedAt
+	 * 
+	 * @param entityId
+	 */
+	public void isValidCreatedAt(FinancialEntity entity, String entityId) {
+<span class="fc" id="L211">		Optional&lt;FinancialEntity&gt; entityDetails = financialRepository.findById(entityId);</span>
+<span class="fc bfc" id="L212" title="All 4 branches covered.">		if (entityDetails.isPresent() &amp;&amp; (entity.getAudit() != null</span>
+<span class="fc bfc" id="L213" title="All 2 branches covered.">				&amp;&amp; !(entity.getAudit().getCreatedAt()).equals(entityDetails.get().getAudit().getCreatedAt()))) {</span>
+<span class="fc" id="L214">			throw new BadRequestException(&quot;createdAt Cannot Be Modified/Changed&quot;);</span>
+		}
+<span class="fc" id="L216">	}</span>
+
+	/**
+	 * Method to Validate EntitiyTypeConfigIdValid
+	 * 
+	 * @param entity
+	 * @param entityTypeId
+	 */
+	public void isEntitiyTypeConfigIdValid(FinancialEntity entity, Long entityTypeId) {
+<span class="fc bfc" id="L225" title="All 4 branches covered.">		if ((entity.getEntityTypeConfig() != null) &amp;&amp; (entity.getEntityTypeConfig().getConfigId() == null</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">				|| !entity.getEntityTypeConfig().getConfigId().equals(entityTypeId))) {</span>
+<span class="fc" id="L227">			throw new BadRequestException(errorMsgs.getMessage(MISMATCH_CONFIG_ID, new Object[] {</span>
+<span class="fc" id="L228">					String.valueOf(entity.getEntityTypeConfig().getConfigId()), String.valueOf(entityTypeId) },</span>
+<span class="fc" id="L229">					CommonUtils.getLocale()));</span>
+		}
+<span class="fc" id="L231">	}</span>
+
+	public void isValidClient(FinancialEntity entity) {
+<span class="fc" id="L234">		clientValidator.isValidClient(entity);</span>
+<span class="fc" id="L235">	}</span>
+
+	public void isCountryStateNullOrNot(FinancialEntity entity) {
+<span class="fc" id="L238">		fSCountryStateValidator.isCountryStateNullOrNot(entity);</span>
+<span class="fc" id="L239">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

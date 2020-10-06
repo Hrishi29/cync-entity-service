@@ -1,0 +1,25 @@
+[
+	{
+		"id": 553,
+		"email": "prasanta.bhoi@idexcel.com",
+		"firstName": "Prasanta",
+		"lastName": "Bhoi",
+		"middleName": "K",
+		"phone": "9738320494",
+		"supervisor": null,
+		"department": null,
+		"licenseType": null,
+		"isActive": true,
+		"position": null,
+		"createdBy": "admin@xyz.com",
+		"modifiedBy": "admin@xyz.com",
+		"createdAt": "2020-02-01T13:18:32Z",
+		"modifiedAt": "2020-02-01T13:18:32Z",
+		"role": {
+			"id": 1,
+			"name": "Credit Analyst",
+			"isBase": true,
+			"baseRole": null
+		}
+	}
+]

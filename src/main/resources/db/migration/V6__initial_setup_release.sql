@@ -1,0 +1,1 @@
+ALTER TABLE enty.tb_entity ALTER COLUMN zip_code TYPE  varchar using zip_code::varchar;

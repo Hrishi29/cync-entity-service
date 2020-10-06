@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StateLookupServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.service.impl</a> &gt; <span class="el_source">StateLookupServiceImpl.java</span></div><h1>StateLookupServiceImpl.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.service.impl;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
+import com.idexcel.cync.los.entity.dao.StateLookupRepository;
+import com.idexcel.cync.los.entity.model.StateLookup;
+import com.idexcel.cync.los.entity.service.StateLookupService;
+import com.idexcel.cync.los.entity.validator.FSCountryStateValidator;
+
+@Service
+public class StateLookupServiceImpl implements StateLookupService {
+
+<span class="fc" id="L19">	private static final Logger LOG = LoggerFactory.getLogger(StateLookupServiceImpl.class);</span>
+	private StateLookupRepository stateLookupRepository;
+	private FSCountryStateValidator fSCountryStateValidator;
+
+	@Autowired
+	public StateLookupServiceImpl(StateLookupRepository stateLookupRepository,
+<span class="fc" id="L25">			FSCountryStateValidator fSCountryStateValidator) {</span>
+<span class="fc" id="L26">		this.stateLookupRepository = stateLookupRepository;</span>
+<span class="fc" id="L27">		this.fSCountryStateValidator = fSCountryStateValidator;</span>
+<span class="fc" id="L28">	}</span>
+
+	/**
+	 * Method to find StateList BasedOn countryId
+	 */
+	@Override
+	public List&lt;StateLookup&gt; findStateList(Long countryId) {
+<span class="fc" id="L35">		LOG.debug(&quot;fetching state list for country...&quot;);</span>
+<span class="fc" id="L36">		Sort sort = Sort.by(Sort.Order.asc(&quot;stateName&quot;));</span>
+<span class="fc" id="L37">		fSCountryStateValidator.isValidCountryId(countryId);</span>
+<span class="fc" id="L38">		return stateLookupRepository.findByCountryId(countryId, sort);</span>
+	}
+
+	/**
+	 * Method to find All States and return State List
+	 */
+	@Override
+	public List&lt;StateLookup&gt; stateList() {
+<span class="fc" id="L46">		Sort sort = Sort.by(Sort.Order.asc(&quot;stateName&quot;));</span>
+<span class="fc" id="L47">		LOG.debug(&quot;fetching State list ...&quot;);</span>
+<span class="fc" id="L48">		return stateLookupRepository.findAll(sort);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

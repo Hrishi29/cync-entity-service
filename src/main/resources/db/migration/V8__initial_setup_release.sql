@@ -1,0 +1,2 @@
+INSERT INTO enty.tb_config (config_id, client_id,  configtype_id, config_code,  config_value, created_by, modified_by) 
+VALUES ('3000013', '1001', '2000004', 'Sole Proprietorship', 'Sole Proprietorship', 'default User','default User');

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LookupDataController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.controller</a> &gt; <span class="el_source">LookupDataController.java</span></div><h1>LookupDataController.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.controller;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.idexcel.cync.los.entity.common.constants.CoreConstants;
+import com.idexcel.cync.los.entity.common.constants.LOSEntityConstants;
+import com.idexcel.cync.los.entity.common.utils.ActivityLog;
+import com.idexcel.cync.los.entity.common.utils.Operation;
+import com.idexcel.cync.los.entity.common.utils.Status;
+import com.idexcel.cync.los.entity.dto.CountryLookupDto;
+import com.idexcel.cync.los.entity.dto.CountryStateLookupDto;
+import com.idexcel.cync.los.entity.dto.LosConfigDetailsDto;
+import com.idexcel.cync.los.entity.dto.LosConfigTypeDto;
+import com.idexcel.cync.los.entity.dto.StateLookupDto;
+import com.idexcel.cync.los.entity.mapper.LookupDataMapper;
+import com.idexcel.cync.los.entity.model.LosConfigDetails;
+import com.idexcel.cync.los.entity.model.LosConfigType;
+import com.idexcel.cync.los.entity.service.ConfigLookupService;
+import com.idexcel.cync.los.entity.service.CountryLookupService;
+import com.idexcel.cync.los.entity.service.StateLookupService;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+
+@RestController
+@CrossOrigin // NOSONAR
+@RequestMapping(value = CoreConstants.API_BASE_PATH + &quot;/lookup/&quot;)
+@Api(tags = {&quot;LookupData Controller&quot;}, description = &quot;LookupDataController : used to Access LookupData API of LOS Entity&quot;)//NOSONAR
+class LookupDataController {
+
+<span class="fc" id="L47">	private static final Logger LOG = LoggerFactory.getLogger(LookupDataController.class);</span>
+	private final CountryLookupService countryLookupService;
+	private final StateLookupService stateLookupService;
+	private final LookupDataMapper lookupDataMapper;
+	private final ConfigLookupService configLookupService;
+
+	@Autowired
+	public LookupDataController(CountryLookupService countryLookupService, StateLookupService stateLookupService,
+<span class="fc" id="L55">			LookupDataMapper lookupDataMapper, ConfigLookupService configLookupService) {</span>
+<span class="fc" id="L56">		this.countryLookupService = countryLookupService;</span>
+<span class="fc" id="L57">		this.stateLookupService = stateLookupService;</span>
+<span class="fc" id="L58">		this.lookupDataMapper = lookupDataMapper;</span>
+<span class="fc" id="L59">		this.configLookupService = configLookupService;</span>
+<span class="fc" id="L60">	}</span>
+
+	/**
+	 * API to get Get countryList
+	 * 
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@GetMapping(&quot;/countries&quot;)
+	@ApiOperation(value = &quot;${ApiOperation.LookupDataController.getAllCountry}&quot;, response = CountryLookupDto.class)
+	public ResponseEntity&lt;List&lt;CountryLookupDto&gt;&gt; getAllCountry(HttpServletRequest request,
+			HttpServletResponse response) {
+<span class="fc" id="L73">		List&lt;CountryLookupDto&gt; countryLookupDtoList = countryLookupService.findCountryList().stream()</span>
+<span class="fc" id="L74">				.map(lookupDataMapper::toCountryLookupDto).collect(Collectors.toList());</span>
+<span class="fc" id="L75">		LOG.debug(&quot;countryList&quot;);</span>
+<span class="fc" id="L76">		LOG.info(ActivityLog.getActivityLog(null, Operation.GET, null, &quot;Get CountryList&quot;,</span>
+<span class="fc" id="L77">				Status.SUCCESS, request.getHeader(LOSEntityConstants.TRANSACTION_ID),</span>
+<span class="fc" id="L78">				ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L79">		return new ResponseEntity&lt;&gt;(countryLookupDtoList, HttpStatus.OK);</span>
+	}
+
+	/**
+	 * API to get GetstateList Based On countryId
+	 * 
+	 * @param countryId
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@GetMapping(&quot;/{countryId}/states&quot;)
+	@ApiOperation(value = &quot;${ApiOperation.LookupDataController.getAllStateForCountryId}&quot;, response = StateLookupDto.class)
+	public ResponseEntity&lt;List&lt;StateLookupDto&gt;&gt; getAllStateForCountryId(
+			@ApiParam(required = true, name = &quot;countryId&quot;, value = &quot;${ApiOperation.LookupDataController.getAllStateForCountryId.countryId}&quot;) @PathVariable(value = &quot;countryId&quot;, required = true) Long countryId,
+			HttpServletRequest request, HttpServletResponse response) {
+<span class="fc" id="L95">		List&lt;StateLookupDto&gt; stateLookupDtoList = stateLookupService.findStateList(countryId).stream()</span>
+<span class="fc" id="L96">				.map(lookupDataMapper::toStateLookupDto).collect(Collectors.toList());</span>
+<span class="fc" id="L97">		LOG.debug(&quot;stateList Based on CountryId&quot;);</span>
+<span class="fc" id="L98">		LOG.info(ActivityLog.getActivityLog(null, Operation.GET, String.valueOf(countryId), &quot;Get CountryList Based On countryId&quot;,</span>
+<span class="fc" id="L99">				Status.SUCCESS, request.getHeader(LOSEntityConstants.TRANSACTION_ID),</span>
+<span class="fc" id="L100">				ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L101">		return new ResponseEntity&lt;&gt;(stateLookupDtoList, HttpStatus.OK);</span>
+	}
+
+	/**
+	 * API to Get AllStateAndCountry Details
+	 * 
+	 * @param countryId
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@GetMapping(&quot;/CountryStateLookup&quot;)
+	@ApiOperation(value = &quot;${ApiOperation.LookupDataController.getAllStateAndCountry}&quot;, response = CountryStateLookupDto.class)
+	public ResponseEntity&lt;List&lt;CountryStateLookupDto&gt;&gt; getAllState(
+			@ApiParam(value = &quot;${ApiOperation.LookupDataController.getAllState}&quot;) HttpServletRequest request,
+			HttpServletResponse response) {
+<span class="fc" id="L117">		List&lt;CountryStateLookupDto&gt; stateLookupDtoList = stateLookupService.stateList().stream()</span>
+<span class="fc" id="L118">				.map(lookupDataMapper::toCountryStateLookupDto).collect(Collectors.toList());</span>
+<span class="fc" id="L119">		LOG.debug(&quot;stateList Based on CountryId&quot;);</span>
+<span class="fc" id="L120">		LOG.info(ActivityLog.getActivityLog(null, Operation.GET, null, &quot;Get AllStateAndCountry Details&quot;,</span>
+<span class="fc" id="L121">				Status.SUCCESS, request.getHeader(LOSEntityConstants.TRANSACTION_ID),</span>
+<span class="fc" id="L122">				ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L123">		return new ResponseEntity&lt;&gt;(stateLookupDtoList, HttpStatus.OK);</span>
+	}
+
+	/**
+	 * API to Get ConfigList Based On configtypeCode
+	 * 
+	 * @param configtypeId
+	 * @param request
+	 * @param response
+	 * @return List Of Configtypes
+	 */
+	@GetMapping(&quot;/configType/{configtypeCode}&quot;)
+	@ApiOperation(value = &quot;${ApiOperation.LookupDataController.getConfigList}&quot;, response = LosConfigDetailsDto.class)
+	public ResponseEntity&lt;List&lt;LosConfigDetailsDto&gt;&gt; getConfigTypeEntityList(
+			@ApiParam(required = true, name = &quot;configtypeCode&quot;, value = &quot;&quot;) @PathVariable(value = &quot;configtypeCode&quot;, required = true) String configtypeCode,
+			HttpServletRequest request, HttpServletResponse response) {
+<span class="fc" id="L139">		List&lt;LosConfigDetails&gt; configDetalsList = configLookupService.findConfigDetails(configtypeCode);</span>
+<span class="fc" id="L140">		LOG.debug(&quot;configList Based on ConfigtypeId&quot;);</span>
+<span class="fc" id="L141">		LOG.info(ActivityLog.getActivityLog(null, Operation.GET, configtypeCode, &quot;Get ConfigList Based On configtypeCode&quot;,</span>
+<span class="fc" id="L142">				Status.SUCCESS, request.getHeader(LOSEntityConstants.TRANSACTION_ID),</span>
+<span class="fc" id="L143">				ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L144">		return new ResponseEntity&lt;&gt;(lookupDataMapper.toConfigDetailsDto(configDetalsList), HttpStatus.OK);</span>
+	}
+
+	/**
+	 * API to Get ConfigList
+	 * 
+	 * @return List Of Configtypes
+	 */
+	@GetMapping(&quot;/configTypes&quot;)
+	@ApiOperation(value = &quot;${ApiOperation.LookupDataController.getListOfConfigTypes}&quot;, response = LosConfigTypeDto.class)
+	public ResponseEntity&lt;List&lt;LosConfigTypeDto&gt;&gt; getListOfConfigTypes(HttpServletRequest request, HttpServletResponse response) {
+<span class="fc" id="L155">		List&lt;LosConfigType&gt; configTypeList = configLookupService.findAllConfigTypes();</span>
+<span class="fc" id="L156">		LOG.debug(&quot;Returning  List Of Configtypes.&quot;);</span>
+<span class="fc" id="L157">		LOG.info(ActivityLog.getActivityLog(null, Operation.GET, null, &quot;Get ConfigList&quot;,</span>
+<span class="fc" id="L158">				Status.SUCCESS, request.getHeader(LOSEntityConstants.TRANSACTION_ID),</span>
+<span class="fc" id="L159">				ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L160">		return new ResponseEntity&lt;&gt;(lookupDataMapper.toLosConfigTypeDto(configTypeList), HttpStatus.OK);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

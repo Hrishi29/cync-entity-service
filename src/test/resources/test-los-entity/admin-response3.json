@@ -1,0 +1,25 @@
+[
+    {
+        "id": 7,
+        "email": "John.William@gmail.com",
+        "firstName": "John",
+        "lastName": "Williams",
+        "middleName": null,
+        "phone": null,
+        "supervisor": null,
+        "department": null,
+        "licenseType": null,
+        "isActive": true,
+        "position": null,
+        "createdBy": "admin@xyz.com",
+        "modifiedBy": "admin@xyz.com",
+        "createdAt": "2020-01-06T07:24:10Z",
+        "modifiedAt": "2020-01-16T15:13:27Z",
+        "role": {
+            "id": 41,
+            "name": "test",
+            "isBase": false,
+            "baseRole": "Administrator"
+        }
+    }
+]

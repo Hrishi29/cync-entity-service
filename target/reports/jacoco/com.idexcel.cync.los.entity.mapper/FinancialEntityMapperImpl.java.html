@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FinancialEntityMapperImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.mapper</a> &gt; <span class="el_source">FinancialEntityMapperImpl.java</span></div><h1>FinancialEntityMapperImpl.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.mapper;
+
+import com.idexcel.cync.los.entity.dto.CommercialEntityDto;
+import com.idexcel.cync.los.entity.dto.FinancialEntityDto;
+import com.idexcel.cync.los.entity.dto.IndividualEntityDto;
+import com.idexcel.cync.los.entity.dto.LosBusinessTypeDto;
+import com.idexcel.cync.los.entity.dto.NaicsDto;
+import com.idexcel.cync.los.entity.model.CommercialEntity;
+import com.idexcel.cync.los.entity.model.FinancialEntity;
+import com.idexcel.cync.los.entity.model.IndividualFinancialEntity;
+import com.idexcel.cync.los.entity.model.LosConfigDetails;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import javax.annotation.Generated;
+import org.springframework.stereotype.Component;
+
+@Generated(
+    value = &quot;org.mapstruct.ap.MappingProcessor&quot;,
+    comments = &quot;version: 1.3.0.Final, compiler: javac, environment: Java 14.0.2 (Oracle Corporation)&quot;
+)
+@Component
+<span class="nc" id="L22">public class FinancialEntityMapperImpl implements FinancialEntityMapper {</span>
+
+    @Override
+    public IndividualEntityDto toIndividualEntityDto(IndividualFinancialEntity financialEntity) {
+<span class="nc bnc" id="L26" title="All 2 branches missed.">        if ( financialEntity == null ) {</span>
+<span class="nc" id="L27">            return null;</span>
+        }
+
+<span class="nc" id="L30">        IndividualEntityDto individualEntityDto = new IndividualEntityDto();</span>
+
+<span class="nc bnc" id="L32" title="All 2 branches missed.">        if ( financialEntity.getDateOfBirth() != null ) {</span>
+<span class="nc" id="L33">            individualEntityDto.setDateOfBirth( new SimpleDateFormat( &quot;MM/dd/yyyy&quot; ).format( financialEntity.getDateOfBirth() ) );</span>
+        }
+<span class="nc" id="L35">        individualEntityDto.setEntityId( financialEntity.getEntityId() );</span>
+<span class="nc" id="L36">        individualEntityDto.setEntityTypeConfig( financialEntity.getEntityTypeConfig() );</span>
+<span class="nc" id="L37">        individualEntityDto.setPhone( financialEntity.getPhone() );</span>
+<span class="nc" id="L38">        individualEntityDto.setEmail( financialEntity.getEmail() );</span>
+<span class="nc" id="L39">        individualEntityDto.setMap( financialEntity.getMap() );</span>
+<span class="nc" id="L40">        individualEntityDto.setNotes( financialEntity.getNotes() );</span>
+<span class="nc" id="L41">        individualEntityDto.setStatus( financialEntity.isStatus() );</span>
+<span class="nc" id="L42">        individualEntityDto.setRelationshipManagerEmail( financialEntity.getRelationshipManagerEmail() );</span>
+<span class="nc" id="L43">        individualEntityDto.setAddress( financialEntity.getAddress() );</span>
+<span class="nc" id="L44">        individualEntityDto.setCountry( financialEntity.getCountry() );</span>
+<span class="nc" id="L45">        individualEntityDto.setState( financialEntity.getState() );</span>
+<span class="nc" id="L46">        individualEntityDto.setCity( financialEntity.getCity() );</span>
+<span class="nc" id="L47">        individualEntityDto.setZipCode( financialEntity.getZipCode() );</span>
+<span class="nc" id="L48">        individualEntityDto.setAudit( financialEntity.getAudit() );</span>
+<span class="nc" id="L49">        individualEntityDto.setFirstName( financialEntity.getFirstName() );</span>
+<span class="nc" id="L50">        individualEntityDto.setMiddleName( financialEntity.getMiddleName() );</span>
+<span class="nc" id="L51">        individualEntityDto.setLastName( financialEntity.getLastName() );</span>
+
+<span class="nc" id="L53">        return individualEntityDto;</span>
+    }
+
+    @Override
+    public CommercialEntityDto toCommercialEntityDto(CommercialEntity financialEntity) {
+<span class="nc bnc" id="L58" title="All 2 branches missed.">        if ( financialEntity == null ) {</span>
+<span class="nc" id="L59">            return null;</span>
+        }
+
+<span class="nc" id="L62">        CommercialEntityDto commercialEntityDto = new CommercialEntityDto();</span>
+
+<span class="nc" id="L64">        commercialEntityDto.setBusinessType( losConfigDetailsToLosBusinessTypeDto( financialEntity.getBusinessType() ) );</span>
+<span class="nc" id="L65">        commercialEntityDto.setNaics( losConfigDetailsToNaicsDto( financialEntity.getNaics() ) );</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        if ( financialEntity.getBusinessOpenDate() != null ) {</span>
+<span class="nc" id="L67">            commercialEntityDto.setBusinessOpenDate( new SimpleDateFormat( &quot;MM/dd/yyyy&quot; ).format( financialEntity.getBusinessOpenDate() ) );</span>
+        }
+<span class="nc" id="L69">        commercialEntityDto.setEntityId( financialEntity.getEntityId() );</span>
+<span class="nc" id="L70">        commercialEntityDto.setEntityTypeConfig( financialEntity.getEntityTypeConfig() );</span>
+<span class="nc" id="L71">        commercialEntityDto.setPhone( financialEntity.getPhone() );</span>
+<span class="nc" id="L72">        commercialEntityDto.setEmail( financialEntity.getEmail() );</span>
+<span class="nc" id="L73">        commercialEntityDto.setMap( financialEntity.getMap() );</span>
+<span class="nc" id="L74">        commercialEntityDto.setNotes( financialEntity.getNotes() );</span>
+<span class="nc" id="L75">        commercialEntityDto.setStatus( financialEntity.isStatus() );</span>
+<span class="nc" id="L76">        commercialEntityDto.setRelationshipManagerEmail( financialEntity.getRelationshipManagerEmail() );</span>
+<span class="nc" id="L77">        commercialEntityDto.setAddress( financialEntity.getAddress() );</span>
+<span class="nc" id="L78">        commercialEntityDto.setCountry( financialEntity.getCountry() );</span>
+<span class="nc" id="L79">        commercialEntityDto.setState( financialEntity.getState() );</span>
+<span class="nc" id="L80">        commercialEntityDto.setCity( financialEntity.getCity() );</span>
+<span class="nc" id="L81">        commercialEntityDto.setZipCode( financialEntity.getZipCode() );</span>
+<span class="nc" id="L82">        commercialEntityDto.setAudit( financialEntity.getAudit() );</span>
+<span class="nc" id="L83">        commercialEntityDto.setBusinessName( financialEntity.getBusinessName() );</span>
+
+<span class="nc" id="L85">        return commercialEntityDto;</span>
+    }
+
+    @Override
+    public IndividualFinancialEntity toIndividualFinancialEntity(IndividualEntityDto financialEntityDto) {
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        if ( financialEntityDto == null ) {</span>
+<span class="nc" id="L91">            return null;</span>
+        }
+
+<span class="nc" id="L94">        IndividualFinancialEntity individualFinancialEntity = new IndividualFinancialEntity();</span>
+
+        try {
+<span class="nc bnc" id="L97" title="All 2 branches missed.">            if ( financialEntityDto.getDateOfBirth() != null ) {</span>
+<span class="nc" id="L98">                individualFinancialEntity.setDateOfBirth( new SimpleDateFormat( &quot;MM/dd/yyyy&quot; ).parse( financialEntityDto.getDateOfBirth() ) );</span>
+            }
+        }
+<span class="nc" id="L101">        catch ( ParseException e ) {</span>
+<span class="nc" id="L102">            throw new RuntimeException( e );</span>
+<span class="nc" id="L103">        }</span>
+<span class="nc" id="L104">        individualFinancialEntity.setEntityId( financialEntityDto.getEntityId() );</span>
+<span class="nc" id="L105">        individualFinancialEntity.setEntityTypeConfig( financialEntityDto.getEntityTypeConfig() );</span>
+<span class="nc" id="L106">        individualFinancialEntity.setPhone( financialEntityDto.getPhone() );</span>
+<span class="nc" id="L107">        individualFinancialEntity.setEmail( financialEntityDto.getEmail() );</span>
+<span class="nc" id="L108">        individualFinancialEntity.setNotes( financialEntityDto.getNotes() );</span>
+<span class="nc" id="L109">        individualFinancialEntity.setStatus( financialEntityDto.isStatus() );</span>
+<span class="nc" id="L110">        individualFinancialEntity.setMap( financialEntityDto.getMap() );</span>
+<span class="nc" id="L111">        individualFinancialEntity.setCity( financialEntityDto.getCity() );</span>
+<span class="nc" id="L112">        individualFinancialEntity.setZipCode( financialEntityDto.getZipCode() );</span>
+<span class="nc" id="L113">        individualFinancialEntity.setCountry( financialEntityDto.getCountry() );</span>
+<span class="nc" id="L114">        individualFinancialEntity.setState( financialEntityDto.getState() );</span>
+<span class="nc" id="L115">        individualFinancialEntity.setRelationshipManagerEmail( financialEntityDto.getRelationshipManagerEmail() );</span>
+<span class="nc" id="L116">        individualFinancialEntity.setAddress( financialEntityDto.getAddress() );</span>
+<span class="nc" id="L117">        individualFinancialEntity.setAudit( financialEntityDto.getAudit() );</span>
+<span class="nc" id="L118">        individualFinancialEntity.setFirstName( financialEntityDto.getFirstName() );</span>
+<span class="nc" id="L119">        individualFinancialEntity.setMiddleName( financialEntityDto.getMiddleName() );</span>
+<span class="nc" id="L120">        individualFinancialEntity.setLastName( financialEntityDto.getLastName() );</span>
+
+<span class="nc" id="L122">        return individualFinancialEntity;</span>
+    }
+
+    @Override
+    public CommercialEntity toCommercialEntity(CommercialEntityDto financialEntityDto) {
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        if ( financialEntityDto == null ) {</span>
+<span class="nc" id="L128">            return null;</span>
+        }
+
+<span class="nc" id="L131">        CommercialEntity commercialEntity = new CommercialEntity();</span>
+
+<span class="nc" id="L133">        commercialEntity.setNaics( naicsDtoToLosConfigDetails( financialEntityDto.getNaics() ) );</span>
+<span class="nc" id="L134">        commercialEntity.setBusinessType( losBusinessTypeDtoToLosConfigDetails( financialEntityDto.getBusinessType() ) );</span>
+        try {
+<span class="nc bnc" id="L136" title="All 2 branches missed.">            if ( financialEntityDto.getBusinessOpenDate() != null ) {</span>
+<span class="nc" id="L137">                commercialEntity.setBusinessOpenDate( new SimpleDateFormat( &quot;MM/dd/yyyy&quot; ).parse( financialEntityDto.getBusinessOpenDate() ) );</span>
+            }
+        }
+<span class="nc" id="L140">        catch ( ParseException e ) {</span>
+<span class="nc" id="L141">            throw new RuntimeException( e );</span>
+<span class="nc" id="L142">        }</span>
+<span class="nc" id="L143">        commercialEntity.setEntityId( financialEntityDto.getEntityId() );</span>
+<span class="nc" id="L144">        commercialEntity.setEntityTypeConfig( financialEntityDto.getEntityTypeConfig() );</span>
+<span class="nc" id="L145">        commercialEntity.setPhone( financialEntityDto.getPhone() );</span>
+<span class="nc" id="L146">        commercialEntity.setEmail( financialEntityDto.getEmail() );</span>
+<span class="nc" id="L147">        commercialEntity.setNotes( financialEntityDto.getNotes() );</span>
+<span class="nc" id="L148">        commercialEntity.setStatus( financialEntityDto.isStatus() );</span>
+<span class="nc" id="L149">        commercialEntity.setMap( financialEntityDto.getMap() );</span>
+<span class="nc" id="L150">        commercialEntity.setCity( financialEntityDto.getCity() );</span>
+<span class="nc" id="L151">        commercialEntity.setZipCode( financialEntityDto.getZipCode() );</span>
+<span class="nc" id="L152">        commercialEntity.setCountry( financialEntityDto.getCountry() );</span>
+<span class="nc" id="L153">        commercialEntity.setState( financialEntityDto.getState() );</span>
+<span class="nc" id="L154">        commercialEntity.setRelationshipManagerEmail( financialEntityDto.getRelationshipManagerEmail() );</span>
+<span class="nc" id="L155">        commercialEntity.setAddress( financialEntityDto.getAddress() );</span>
+<span class="nc" id="L156">        commercialEntity.setAudit( financialEntityDto.getAudit() );</span>
+<span class="nc" id="L157">        commercialEntity.setBusinessName( financialEntityDto.getBusinessName() );</span>
+
+<span class="nc" id="L159">        return commercialEntity;</span>
+    }
+
+    @Override
+    public FinancialEntity toFinancialEntity(FinancialEntityDto financialEntityDto) {
+<span class="nc bnc" id="L164" title="All 2 branches missed.">        if ( financialEntityDto == null ) {</span>
+<span class="nc" id="L165">            return null;</span>
+        }
+
+<span class="nc" id="L168">        FinancialEntity financialEntity = new FinancialEntity();</span>
+
+<span class="nc" id="L170">        financialEntity.setEntityId( financialEntityDto.getEntityId() );</span>
+<span class="nc" id="L171">        financialEntity.setEntityTypeConfig( financialEntityDto.getEntityTypeConfig() );</span>
+<span class="nc" id="L172">        financialEntity.setPhone( financialEntityDto.getPhone() );</span>
+<span class="nc" id="L173">        financialEntity.setEmail( financialEntityDto.getEmail() );</span>
+<span class="nc" id="L174">        financialEntity.setNotes( financialEntityDto.getNotes() );</span>
+<span class="nc" id="L175">        financialEntity.setStatus( financialEntityDto.isStatus() );</span>
+<span class="nc" id="L176">        financialEntity.setMap( financialEntityDto.getMap() );</span>
+<span class="nc" id="L177">        financialEntity.setCity( financialEntityDto.getCity() );</span>
+<span class="nc" id="L178">        financialEntity.setZipCode( financialEntityDto.getZipCode() );</span>
+<span class="nc" id="L179">        financialEntity.setCountry( financialEntityDto.getCountry() );</span>
+<span class="nc" id="L180">        financialEntity.setState( financialEntityDto.getState() );</span>
+<span class="nc" id="L181">        financialEntity.setRelationshipManagerEmail( financialEntityDto.getRelationshipManagerEmail() );</span>
+<span class="nc" id="L182">        financialEntity.setAddress( financialEntityDto.getAddress() );</span>
+<span class="nc" id="L183">        financialEntity.setAudit( financialEntityDto.getAudit() );</span>
+
+<span class="nc" id="L185">        return financialEntity;</span>
+    }
+
+    protected LosBusinessTypeDto losConfigDetailsToLosBusinessTypeDto(LosConfigDetails losConfigDetails) {
+<span class="nc bnc" id="L189" title="All 2 branches missed.">        if ( losConfigDetails == null ) {</span>
+<span class="nc" id="L190">            return null;</span>
+        }
+
+<span class="nc" id="L193">        LosBusinessTypeDto losBusinessTypeDto = new LosBusinessTypeDto();</span>
+
+<span class="nc" id="L195">        losBusinessTypeDto.setBusinessCode( losConfigDetails.getConfigCode() );</span>
+<span class="nc" id="L196">        losBusinessTypeDto.setConfigValue( losConfigDetails.getConfigValue() );</span>
+<span class="nc" id="L197">        losBusinessTypeDto.setConfigTypeCode( losConfigDetails.getConfigtypeCode() );</span>
+<span class="nc" id="L198">        losBusinessTypeDto.setBusinessTypeId( losConfigDetails.getConfigId() );</span>
+
+<span class="nc" id="L200">        return losBusinessTypeDto;</span>
+    }
+
+    protected NaicsDto losConfigDetailsToNaicsDto(LosConfigDetails losConfigDetails) {
+<span class="nc bnc" id="L204" title="All 2 branches missed.">        if ( losConfigDetails == null ) {</span>
+<span class="nc" id="L205">            return null;</span>
+        }
+
+<span class="nc" id="L208">        NaicsDto naicsDto = new NaicsDto();</span>
+
+<span class="nc" id="L210">        naicsDto.setNaicsCode( losConfigDetails.getConfigCode() );</span>
+<span class="nc" id="L211">        naicsDto.setNaicsCodeValue( losConfigDetails.getConfigValue() );</span>
+<span class="nc" id="L212">        naicsDto.setNaicsCodeId( losConfigDetails.getConfigId() );</span>
+
+<span class="nc" id="L214">        return naicsDto;</span>
+    }
+
+    protected LosConfigDetails naicsDtoToLosConfigDetails(NaicsDto naicsDto) {
+<span class="nc bnc" id="L218" title="All 2 branches missed.">        if ( naicsDto == null ) {</span>
+<span class="nc" id="L219">            return null;</span>
+        }
+
+<span class="nc" id="L222">        LosConfigDetails losConfigDetails = new LosConfigDetails();</span>
+
+<span class="nc" id="L224">        losConfigDetails.setConfigId( naicsDto.getNaicsCodeId() );</span>
+<span class="nc" id="L225">        losConfigDetails.setConfigCode( naicsDto.getNaicsCode() );</span>
+<span class="nc" id="L226">        losConfigDetails.setConfigValue( naicsDto.getNaicsCodeValue() );</span>
+
+<span class="nc" id="L228">        return losConfigDetails;</span>
+    }
+
+    protected LosConfigDetails losBusinessTypeDtoToLosConfigDetails(LosBusinessTypeDto losBusinessTypeDto) {
+<span class="nc bnc" id="L232" title="All 2 branches missed.">        if ( losBusinessTypeDto == null ) {</span>
+<span class="nc" id="L233">            return null;</span>
+        }
+
+<span class="nc" id="L236">        LosConfigDetails losConfigDetails = new LosConfigDetails();</span>
+
+<span class="nc" id="L238">        losConfigDetails.setConfigtypeCode( losBusinessTypeDto.getConfigTypeCode() );</span>
+<span class="nc" id="L239">        losConfigDetails.setConfigValue( losBusinessTypeDto.getConfigValue() );</span>
+<span class="nc" id="L240">        losConfigDetails.setConfigId( losBusinessTypeDto.getBusinessTypeId() );</span>
+<span class="nc" id="L241">        losConfigDetails.setConfigCode( losBusinessTypeDto.getBusinessCode() );</span>
+
+<span class="nc" id="L243">        return losConfigDetails;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

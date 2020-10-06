@@ -1,0 +1,12 @@
+{
+	"entityId2": "FBOC000000C",
+	"entityRelationConfigDetail": {
+		"configCode": "string",
+		"configId": 30000010,
+		"configValue": "string",
+		"configtypeCode": "string",
+		"configtypeId": 0
+	},
+	"ownership": 0,
+	"status": true
+}

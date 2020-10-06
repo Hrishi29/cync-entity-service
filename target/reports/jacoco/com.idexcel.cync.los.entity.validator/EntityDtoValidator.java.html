@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EntityDtoValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.validator</a> &gt; <span class="el_source">EntityDtoValidator.java</span></div><h1>EntityDtoValidator.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.validator;
+
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.COMMERCIAL_ENTITY_NAME_FORMAT;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.COMMERCIAL_ENTITY_NAME_LENGTH;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.INVALID_DATE;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Service;
+
+import com.idexcel.cync.los.entity.common.constants.LOSEntityConstants;
+import com.idexcel.cync.los.entity.common.utils.ActivityLog;
+import com.idexcel.cync.los.entity.common.utils.CommonUtils;
+import com.idexcel.cync.los.entity.common.utils.Operation;
+import com.idexcel.cync.los.entity.common.utils.Status;
+import com.idexcel.cync.los.entity.dto.CommercialEntityDto;
+import com.idexcel.cync.los.entity.dto.IndividualEntityDto;
+import com.idexcel.cync.los.entity.exception.BadRequestException;
+
+@Service
+public class EntityDtoValidator {
+
+<span class="fc" id="L28">	private static final Logger LOG = LoggerFactory.getLogger(EntityDtoValidator.class);</span>
+
+	public final MessageSource errorMsgs;
+
+	@Autowired
+<span class="fc" id="L33">	public EntityDtoValidator(MessageSource errorMsgs) {</span>
+<span class="fc" id="L34">		this.errorMsgs = errorMsgs;</span>
+<span class="fc" id="L35">	}</span>
+
+	/**
+	 * Method to Validate BusinessOpenDate of CommercialEntityDto
+	 * 
+	 * @param commercialEntityDto
+	 * @return
+	 */
+	public CommercialEntityDto isvalidDate(CommercialEntityDto commercialEntityDto) {
+<span class="fc bfc" id="L44" title="All 2 branches covered.">		if (commercialEntityDto.getBusinessOpenDate() == null)</span>
+<span class="fc" id="L45">			commercialEntityDto.setBusinessOpenDate(null);</span>
+		else
+<span class="fc" id="L47">			validateDate(commercialEntityDto.getBusinessOpenDate());</span>
+<span class="fc" id="L48">		return commercialEntityDto;</span>
+	}
+
+	/**
+	 * Method to Validate DateOfBirth of IndividualEntityDto
+	 * 
+	 * @param individualFinancialEntityDto
+	 * @return
+	 */
+	public IndividualEntityDto isvalidDate(IndividualEntityDto individualFinancialEntityDto) {
+<span class="fc bfc" id="L58" title="All 2 branches covered.">		if (individualFinancialEntityDto.getDateOfBirth() == null)</span>
+<span class="fc" id="L59">			individualFinancialEntityDto.setDateOfBirth(null);</span>
+		else
+<span class="fc" id="L61">			validateDate(individualFinancialEntityDto.getDateOfBirth());</span>
+<span class="fc" id="L62">		return individualFinancialEntityDto;</span>
+	}
+
+	/**
+	 * Method to Validate Date, Given date Cannot Be Greater than Last Date of the
+	 * Month
+	 * 
+	 * @param dateToValidate
+	 */
+	private void validateDate(String dateToValidate) {
+<span class="fc" id="L72">		DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern(LOSEntityConstants.DATE_FORMAT);</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">		if (!dateToValidate.equals(dateFormat.format(LocalDate.parse(dateToValidate, dateFormat)))) {</span>
+<span class="fc" id="L74">			LOG.info(ActivityLog.getActivityLog(null, Operation.INSERT_OR_UPDATE, null,</span>
+<span class="fc" id="L75">					&quot;Entered invalid date :&quot; + dateToValidate, Status.ERROR, null, ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L76">			throw new BadRequestException(</span>
+<span class="fc" id="L77">					errorMsgs.getMessage(INVALID_DATE, new Object[] { dateToValidate }, CommonUtils.getLocale()));</span>
+		}
+<span class="fc" id="L79">	}</span>
+
+	/**
+	 * 
+	 * @param commercialEntityDto
+	 * @return
+	 */
+	public CommercialEntityDto isvalidBusinessName(CommercialEntityDto commercialEntityDto) {
+<span class="fc bfc" id="L87" title="All 4 branches covered.">		if (!commercialEntityDto.getBusinessName().isEmpty() &amp;&amp; (commercialEntityDto.getBusinessName().length() &lt; 3)) {</span>
+<span class="fc" id="L88">			LOG.info(ActivityLog.getActivityLog(commercialEntityDto.getBusinessName(), Operation.INSERT, null,</span>
+<span class="fc" id="L89">					&quot;Invalid businessName length&quot; + commercialEntityDto.getBusinessName(), Status.ERROR, null,</span>
+<span class="fc" id="L90">					ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L91">			throw new BadRequestException(</span>
+<span class="fc" id="L92">					errorMsgs.getMessage(COMMERCIAL_ENTITY_NAME_LENGTH, null, CommonUtils.getLocale()));</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">		} else if (!commercialEntityDto.getBusinessName().isEmpty() &amp;&amp; (commercialEntityDto.getBusinessName()</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">				.matches(&quot;^[a-zA-Z0-9!,\\\\#'&amp;@\\-\\[\\]\\(\\)+%$\\?\\&gt;\\&lt;\\/ ]*[a-zA-Z0-9]+[a-zA-Z0-9!,\\\\#'&amp;@\\-\\[\\]\\(\\)+%$\\?\\&gt;\\&lt;\\/ ]*$&quot;) == Boolean.FALSE)) {// NOSONAR</span>
+<span class="nc" id="L95">			LOG.info(ActivityLog.getActivityLog(commercialEntityDto.getBusinessName(), Operation.INSERT_OR_UPDATE, null,</span>
+<span class="nc" id="L96">					&quot;Invalid businessName format&quot;, Status.ERROR, null, ActivityLog.localDateTimeInUTC()));</span>
+<span class="nc" id="L97">			throw new BadRequestException(</span>
+<span class="nc" id="L98">					errorMsgs.getMessage(COMMERCIAL_ENTITY_NAME_FORMAT, null, CommonUtils.getLocale()));</span>
+		}
+<span class="fc" id="L100">		return commercialEntityDto;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

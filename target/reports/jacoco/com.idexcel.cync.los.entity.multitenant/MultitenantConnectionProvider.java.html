@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MultitenantConnectionProvider.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.multitenant</a> &gt; <span class="el_source">MultitenantConnectionProvider.java</span></div><h1>MultitenantConnectionProvider.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.multitenant;
+
+import java.io.Serializable;
+import java.util.Map;
+
+import javax.sql.DataSource;
+
+import org.hibernate.engine.jdbc.connections.spi.AbstractDataSourceBasedMultiTenantConnectionProviderImpl;
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.idexcel.cync.los.entity.common.constants.LOSEntityConstants;
+import com.idexcel.cync.los.entity.exception.BadRequestException;
+import com.idexcel.cync.los.entity.multitenant.MultitenancyProperties.LosDataSourceProperties;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+
+<span class="nc" id="L19">public class MultitenantConnectionProvider extends AbstractDataSourceBasedMultiTenantConnectionProviderImpl implements Serializable{</span>
+	private static final long serialVersionUID = 1L;
+
+	@Autowired
+	private Map&lt;String, DataSource&gt; dataSourcesMtApp;//NOSONAR
+	@Autowired
+	private MultitenancyProperties multitenancyProperties;
+
+	@Override
+	protected DataSource selectAnyDataSource() {
+<span class="nc" id="L29">		return this.dataSourcesMtApp.values().iterator().next();</span>
+	}
+	
+	@Override
+	protected DataSource selectDataSource(String tenantIdentifier) {
+<span class="nc" id="L34">		DataSource dt = this.dataSourcesMtApp.get(tenantIdentifier);</span>
+<span class="nc" id="L35">		LosDataSourceProperties dbProperties =	this.multitenancyProperties.getDataSources();</span>
+<span class="nc" id="L36">	    HikariDataSource dataSource = null;</span>
+<span class="nc" id="L37">	    String lenderName= MDC.get(LOSEntityConstants.CLIENT_NAME_KEY);</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">		if (dt == null) {</span>
+			try {
+<span class="nc" id="L40">				dataSource = getHikariDatasource(dbProperties, lenderName, dbProperties.getConnectionPoolSize(), &quot;_db_connection_pool&quot;);</span>
+<span class="nc" id="L41">			} catch (Exception e) {</span>
+<span class="nc" id="L42">				throw new BadRequestException(&quot;application is not configred for lender &quot;+lenderName);</span>
+<span class="nc" id="L43">			}</span>
+<span class="nc" id="L44">			dataSourcesMtApp.put(lenderName, dataSource);</span>
+<span class="nc" id="L45">			return dataSource;</span>
+		}
+<span class="nc" id="L47">		return dt;</span>
+	}
+	
+	
+	/**
+	 * 
+	 * @param dsProperties
+	 * @param poolName
+	 * @return
+	 */
+	private HikariDataSource getHikariDatasource(LosDataSourceProperties dsProperties, String dbName, int poolSize, String poolName) {
+<span class="nc" id="L58">		HikariConfig hikariConfig = new HikariConfig();</span>
+<span class="nc" id="L59">		String url = dsProperties.getUrl().concat(&quot;/&quot;).concat(dbName);</span>
+<span class="nc" id="L60">		hikariConfig.setJdbcUrl(url);</span>
+<span class="nc" id="L61">		hikariConfig.setUsername(dsProperties.getUsername());</span>
+<span class="nc" id="L62">		hikariConfig.setPassword(dsProperties.getPassword());</span>
+<span class="nc" id="L63">		hikariConfig.setMaximumPoolSize(poolSize);</span>
+<span class="nc" id="L64">		hikariConfig.setPoolName(dbName + &quot;_&quot; + poolName);</span>
+<span class="nc" id="L65">		hikariConfig.addDataSourceProperty(&quot;dataSource.cachePrepStmts&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L66">		hikariConfig.addDataSourceProperty(&quot;dataSource.prepStmtCacheSize&quot;, &quot;250&quot;);</span>
+<span class="nc" id="L67">		hikariConfig.addDataSourceProperty(&quot;dataSource.prepStmtCacheSqlLimit&quot;, &quot;2048&quot;);</span>
+<span class="nc" id="L68">		hikariConfig.addDataSourceProperty(&quot;dataSource.useServerPrepStmts&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L69">		hikariConfig.addDataSourceProperty(&quot;dataSource.cacheResultSetMetadata&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L70">		return new HikariDataSource(hikariConfig);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

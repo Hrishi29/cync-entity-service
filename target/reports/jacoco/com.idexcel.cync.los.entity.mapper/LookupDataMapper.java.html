@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LookupDataMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.mapper</a> &gt; <span class="el_source">LookupDataMapper.java</span></div><h1>LookupDataMapper.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.mapper;
+
+import java.util.List;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
+
+import com.idexcel.cync.los.entity.dto.CountryLookupDto;
+import com.idexcel.cync.los.entity.dto.CountryStateLookupDto;
+import com.idexcel.cync.los.entity.dto.LosConfigDetailsDto;
+import com.idexcel.cync.los.entity.dto.LosConfigTypeDto;
+import com.idexcel.cync.los.entity.dto.StateLookupDto;
+import com.idexcel.cync.los.entity.model.CountryLookup;
+import com.idexcel.cync.los.entity.model.LosConfigDetails;
+import com.idexcel.cync.los.entity.model.LosConfigType;
+import com.idexcel.cync.los.entity.model.StateLookup;
+
+/**
+ * 
+ * @author Amit
+ *
+ */
+
+@Mapper
+public interface LookupDataMapper {// NOSONAR
+<span class="nc" id="L27">	LookupDataMapper INSTANCE = Mappers.getMapper(LookupDataMapper.class);</span>
+
+	CountryLookupDto toCountryLookupDto(CountryLookup countryLookup);
+
+	StateLookupDto toStateLookupDto(StateLookup countryLookup);
+
+	@Mapping(target = &quot;countryName&quot;, source = &quot;countryLookup.countryName&quot;)
+	@Mapping(target = &quot;countryCode&quot;, source = &quot;countryLookup.countryCode&quot;)
+	CountryStateLookupDto toCountryStateLookupDto(StateLookup countryLookup);
+
+	List&lt;CountryLookupDto&gt; convertToListCountryLookupDto(List&lt;CountryLookup&gt; countryLookup);
+
+	List&lt;StateLookupDto&gt; convertToListStateLookupDto(List&lt;StateLookup&gt; stateLookup);
+
+	LosConfigDetailsDto toConfigDetailsDto(LosConfigDetails losConfigDetails);
+
+	List&lt;LosConfigDetailsDto&gt; toConfigDetailsDto(List&lt;LosConfigDetails&gt; losConfigDetails);
+
+	List&lt;LosConfigTypeDto&gt; toLosConfigTypeDto(List&lt;LosConfigType&gt; configTypeList);
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

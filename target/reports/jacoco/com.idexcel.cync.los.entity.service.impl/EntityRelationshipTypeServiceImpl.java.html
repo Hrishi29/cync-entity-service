@@ -1,0 +1,1057 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EntityRelationshipTypeServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.service.impl</a> &gt; <span class="el_source">EntityRelationshipTypeServiceImpl.java</span></div><h1>EntityRelationshipTypeServiceImpl.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.service.impl;
+
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.INVALID_RELATIONTYPE_ID;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.INVALID_RELATION_TYPE_ID;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Service;
+
+import com.idexcel.cync.los.entity.common.constants.LOSEntityConstants;
+import com.idexcel.cync.los.entity.common.utils.ActivityLog;
+import com.idexcel.cync.los.entity.common.utils.CommonUtils;
+import com.idexcel.cync.los.entity.common.utils.Operation;
+import com.idexcel.cync.los.entity.common.utils.Status;
+import com.idexcel.cync.los.entity.dao.ChildEntityNodeRepository;
+import com.idexcel.cync.los.entity.dao.ConfigLookupRepository;
+import com.idexcel.cync.los.entity.dao.EntityNodeRepository;
+import com.idexcel.cync.los.entity.dao.EntityRelationshipTypeRepository;
+import com.idexcel.cync.los.entity.dao.IndividualEntityRepository;
+import com.idexcel.cync.los.entity.dao.ParentEntityNodeRepository;
+import com.idexcel.cync.los.entity.dto.EntityNodeSpouseDto;
+import com.idexcel.cync.los.entity.exception.BadRequestException;
+import com.idexcel.cync.los.entity.exception.ResourceNotFoundException;
+import com.idexcel.cync.los.entity.model.CommercialEntity;
+import com.idexcel.cync.los.entity.model.EntityNode;
+import com.idexcel.cync.los.entity.model.EntityNodeSpouse;
+import com.idexcel.cync.los.entity.model.EntityRelationshipType;
+import com.idexcel.cync.los.entity.model.LosConfigDetails;
+import com.idexcel.cync.los.entity.model.ParentEntityNode;
+import com.idexcel.cync.los.entity.service.EntityRelationshipTypeService;
+import com.idexcel.cync.los.entity.validator.ClientValidator;
+import com.idexcel.cync.los.entity.validator.EntityRelationshipValidatorService;
+
+@Service
+public class EntityRelationshipTypeServiceImpl implements EntityRelationshipTypeService {
+
+<span class="fc" id="L46">	private static final Logger LOG = LoggerFactory.getLogger(EntityRelationshipTypeServiceImpl.class);</span>
+
+	private final EntityNodeRepository entityNodeRepository;
+	private final ConfigLookupRepository configLookupRepository;
+	private final EntityRelationshipTypeRepository entityRelationshipTypeRepository;
+	private final EntityRelationshipValidatorService entityRelationshipValidator;
+	private final ParentEntityNodeRepository parentEntityNodeRepository;
+	private final ChildEntityNodeRepository childEntityNodeRepository;
+	private final EntityRelationshipTreeServiceImpl entityRelationshipTreeServiceImpl;
+
+	@Autowired
+	private MessageSource errorMsgs;
+
+	@Autowired
+	private ClientValidator clientValidator;
+
+	@Autowired
+	private IndividualEntityRepository individualEntityRepository;
+
+	@Autowired
+	public EntityRelationshipTypeServiceImpl(EntityNodeRepository entityNodeRepository,
+			EntityRelationshipTypeRepository entityRelationshipTypeRepository,
+			ConfigLookupRepository configLookupRepository,
+			EntityRelationshipValidatorService entityRelationshipValidator,
+			ParentEntityNodeRepository parentEntityNodeRepository, ChildEntityNodeRepository childEntityNodeRepository,
+<span class="fc" id="L71">			EntityRelationshipTreeServiceImpl entityRelationshipTreeServiceImpl) {</span>
+<span class="fc" id="L72">		this.entityNodeRepository = entityNodeRepository;</span>
+<span class="fc" id="L73">		this.configLookupRepository = configLookupRepository;</span>
+<span class="fc" id="L74">		this.entityRelationshipTypeRepository = entityRelationshipTypeRepository;</span>
+<span class="fc" id="L75">		this.entityRelationshipValidator = entityRelationshipValidator;</span>
+<span class="fc" id="L76">		this.parentEntityNodeRepository = parentEntityNodeRepository;</span>
+<span class="fc" id="L77">		this.childEntityNodeRepository = childEntityNodeRepository;</span>
+<span class="fc" id="L78">		this.entityRelationshipTreeServiceImpl = entityRelationshipTreeServiceImpl;</span>
+<span class="fc" id="L79">	}</span>
+
+	public Long saveEntityRelation(EntityRelationshipType entityRelationshipType, String entityId1) {
+<span class="nc" id="L82">		clientValidator.isValidClient(entityRelationshipType);</span>
+<span class="nc" id="L83">		entityRelationshipValidator.isValidEntityRelation(entityRelationshipType, entityId1);</span>
+<span class="nc" id="L84">		entityRelationshipValidator.isValidSpouseCount(entityRelationshipType, entityId1);</span>
+<span class="nc" id="L85">		entityRelationshipType.setEntityId1(entityId1);</span>
+<span class="nc" id="L86">		return entityRelationshipTypeRepository.save(entityRelationshipType).getEntityRelationshiptypeId();</span>
+	}
+
+	@Override
+	public EntityNode findEntityRelationTreeByEntityId(String entityId1) {
+<span class="nc" id="L91">		List&lt;EntityNode&gt; entityNodes = entityNodeRepository.findEntityTreeData(entityId1);</span>
+<span class="nc" id="L92">		return entityRelationshipTreeServiceImpl.createTree(entityNodes, entityId1);</span>
+	}
+
+	public int findParentEntityIsNotDeletedCount(String entityId) {
+<span class="fc" id="L96">		return childEntityNodeRepository.countByParentIdAndDeleted(entityId, false);</span>
+	}
+
+	/**
+	 * Method to return the findEntityRelationList By given EntityId
+	 */
+	@Override
+	public List&lt;EntityRelationshipType&gt; findEntityRelationListByEntityId(String entityId) {
+<span class="fc" id="L104">		List&lt;EntityRelationshipType&gt; relationList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L105">		LosConfigDetails owner = configLookupRepository.findByConfigId(LOSEntityConstants.OWNER);</span>
+<span class="fc" id="L106">		LosConfigDetails owned = configLookupRepository.findByConfigId(LOSEntityConstants.OWNED);</span>
+<span class="fc" id="L107">		LosConfigDetails affilated = configLookupRepository.findByConfigId(LOSEntityConstants.AFFILIATED);</span>
+<span class="fc" id="L108">		LosConfigDetails subsidary = configLookupRepository.findByConfigId(LOSEntityConstants.SUBSIDIARY);</span>
+<span class="fc" id="L109">		int parentCount = findParentEntityIsNotDeletedCount(entityId);</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">		if (parentCount == 0) {</span>
+<span class="fc" id="L111">			List&lt;String&gt; commercialEntityId2List = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L112">			List&lt;String&gt; cToCRelation = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L113">			List&lt;String&gt; iToCRelation = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L114">			CommercialEntity parentEntity = new CommercialEntity();</span>
+<span class="fc" id="L115">			List&lt;EntityRelationshipType&gt; parents = entityRelationshipTypeRepository</span>
+<span class="fc" id="L116">					.findByEntityId1AndDeletedAndStatus(Arrays.asList(entityId));</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">			if (parents.isEmpty()) {</span>
+<span class="fc" id="L118">				return entityRelationshipTypeRepository.findByEntityId2AndDeleted(Arrays.asList(entityId));</span>
+			}
+<span class="nc" id="L120">			parentNotPresent(entityId, relationList, owner, affilated, subsidary, commercialEntityId2List, cToCRelation,</span>
+					iToCRelation, parentEntity, parents);
+<span class="nc" id="L122">			relationList.addAll(parents);</span>
+<span class="nc" id="L123">		} else {</span>
+<span class="nc" id="L124">			List&lt;EntityRelationshipType&gt; children = parentPresent(entityId, relationList, owner, owned, affilated,</span>
+					subsidary);
+<span class="nc" id="L126">			relationList.addAll(children);</span>
+		}
+<span class="nc" id="L128">		return relationList;</span>
+	}
+
+	/**
+	 * Method to find the Data if parentPresent for Given entityId
+	 * 
+	 * @param entityId
+	 * @param relationList
+	 * @param owner
+	 * @param owned
+	 * @param affilated
+	 * @param subsidary
+	 * @return
+	 */
+	private List&lt;EntityRelationshipType&gt; parentPresent(String entityId, List&lt;EntityRelationshipType&gt; relationList,
+			LosConfigDetails owner, LosConfigDetails owned, LosConfigDetails affilated, LosConfigDetails subsidary) {
+<span class="nc" id="L144">		List&lt;EntityRelationshipType&gt; affialiateDataList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L145">		List&lt;EntityRelationshipType&gt; child = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L146">		List&lt;String&gt; individualEntityId2List = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L147">		List&lt;String&gt; commercialEntityId2List = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L148">		List&lt;String&gt; childrenEntityId2List = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L149">		List&lt;EntityRelationshipType&gt; children = entityRelationshipTypeRepository</span>
+<span class="nc" id="L150">				.findByEntityId1AndDeletedAndStatus(Arrays.asList(entityId));</span>
+<span class="nc" id="L151">		List&lt;EntityRelationshipType&gt; parents = entityRelationshipTypeRepository</span>
+<span class="nc" id="L152">				.findByEntityId2AndDeleted(Arrays.asList(entityId));</span>
+<span class="nc" id="L153">		parents.stream().forEach(getIndividualEntityId2 -&gt; {</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">			if ((getRelationTypeId(getIndividualEntityId2).equals(LOSEntityConstants.OWNER)</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">					|| getRelationTypeId(getIndividualEntityId2).equals(LOSEntityConstants.OWNED))</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">					&amp;&amp; getIndividualEntityId2.getEntityId2().endsWith(LOSEntityConstants.INDIVIDUAL_SUFFIX_CODE)) {</span>
+<span class="nc" id="L157">				individualEntityId2List.add(getIndividualEntityId2.getEntityId2());</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">			} else if (getIndividualEntityId2.getEntityId2().endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">					&amp;&amp; (getRelationTypeId(getIndividualEntityId2).equals(LOSEntityConstants.SUBSIDIARY)</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">							|| getRelationTypeId(getIndividualEntityId2).equals(LOSEntityConstants.AFFILIATED)</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">							|| getRelationTypeId(getIndividualEntityId2).equals(LOSEntityConstants.OWNER))) {</span>
+<span class="nc" id="L162">				commercialEntityId2List.add(getIndividualEntityId2.getEntityId2());</span>
+			}
+<span class="nc" id="L164">		});</span>
+<span class="nc" id="L165">		children.forEach(getEntityId2 -&gt; {</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">			if (!childrenEntityId2List.contains(getEntityId2.getEntityId2())) {</span>
+<span class="nc" id="L167">				childrenEntityId2List.add(getEntityId2.getEntityId2());</span>
+			}
+<span class="nc" id="L169">		});</span>
+<span class="nc bnc" id="L170" title="All 4 branches missed.">		if (!individualEntityId2List.isEmpty() || !childrenEntityId2List.isEmpty()</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">				|| !commercialEntityId2List.isEmpty()) {</span>
+<span class="nc" id="L172">			return checkEntityIdsList(entityId, relationList, owner, owned, affilated, subsidary, affialiateDataList,</span>
+					individualEntityId2List, commercialEntityId2List, childrenEntityId2List, children, parents);
+		} else {
+<span class="nc" id="L175">			child.addAll(children);</span>
+<span class="nc" id="L176">			child.addAll(parents);</span>
+		}
+<span class="nc" id="L178">		return child;</span>
+	}
+
+	/**
+	 * @param entityId
+	 * @param relationList
+	 * @param owner
+	 * @param owned
+	 * @param affilated
+	 * @param subsidary
+	 * @param affialiateDataList
+	 * @param individualEntityId2List
+	 * @param commercialEntityId2List
+	 * @param childrenEntityId2List
+	 * @param children
+	 * @param parents
+	 * @return
+	 */
+	private List&lt;EntityRelationshipType&gt; checkEntityIdsList(String entityId, List&lt;EntityRelationshipType&gt; relationList,
+			LosConfigDetails owner, LosConfigDetails owned, LosConfigDetails affilated, LosConfigDetails subsidary,
+			List&lt;EntityRelationshipType&gt; affialiateDataList, List&lt;String&gt; individualEntityId2List,
+			List&lt;String&gt; commercialEntityId2List, List&lt;String&gt; childrenEntityId2List,
+			List&lt;EntityRelationshipType&gt; children, List&lt;EntityRelationshipType&gt; parents) {
+<span class="nc bnc" id="L201" title="All 2 branches missed.">		if (!childrenEntityId2List.isEmpty()) {</span>
+<span class="nc" id="L202">			listAPILevelTwoData(entityId, relationList, subsidary, childrenEntityId2List);</span>
+		}
+<span class="nc bnc" id="L204" title="All 2 branches missed.">		if (!individualEntityId2List.isEmpty()) {</span>
+<span class="nc" id="L205">			listAPIgetOwnedCompanies(entityId, relationList, affilated, affialiateDataList, individualEntityId2List,</span>
+					childrenEntityId2List);
+		}
+<span class="nc" id="L208">		parents.stream().forEach(changingRelation -&gt; {</span>
+<span class="nc" id="L209">			changeRelationshipListApi(relationList, owner, owned, subsidary, changingRelation);</span>
+<span class="nc" id="L210">		});</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">		if (!commercialEntityId2List.isEmpty()) {</span>
+<span class="nc" id="L212">			parents.stream().forEach(changingRelation -&gt; {</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">				if (!commercialEntityId2List.contains(changingRelation.getEntityId2()) &amp;&amp; (changingRelation</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">						.getEntityId1().endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">						&amp;&amp; changingRelation.getEntityId2().endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE))) {</span>
+<span class="nc" id="L216">					List&lt;EntityRelationshipType&gt; levelOnesChildren = entityRelationshipTypeRepository</span>
+<span class="nc" id="L217">							.findByEntityId1AndDeletedAndStatus(commercialEntityId2List);</span>
+<span class="nc" id="L218">					relationList.addAll(levelOnesChildren);</span>
+				}
+<span class="nc" id="L220">			});</span>
+		}
+<span class="nc" id="L222">		return children;</span>
+	}
+
+	/**
+	 * @param entityId
+	 * @param relationList
+	 * @param affilated
+	 * @param affialiateDataList
+	 * @param individualEntityId2List
+	 * @param childrenEntityId2List
+	 */
+	private void listAPIgetOwnedCompanies(String entityId, List&lt;EntityRelationshipType&gt; relationList,
+			LosConfigDetails affilated, List&lt;EntityRelationshipType&gt; affialiateDataList,
+			List&lt;String&gt; individualEntityId2List, List&lt;String&gt; childrenEntityId2List) {
+<span class="nc" id="L236">		List&lt;EntityRelationshipType&gt; getOwnedCompanies = entityRelationshipTypeRepository</span>
+<span class="nc" id="L237">				.findByEntityId1AndDeletedREverse(individualEntityId2List);</span>
+<span class="nc" id="L238">		CommercialEntity parentEntity = new CommercialEntity();</span>
+<span class="nc" id="L239">		getOwnedCompanies.stream().forEach(changeRelation -&gt; {</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">			if (!childrenEntityId2List.contains(changeRelation.getEntityId1())) {</span>
+<span class="nc" id="L241">				changeTheRelationDataOfOwnedCompanies(entityId, affilated, affialiateDataList, parentEntity,</span>
+						changeRelation);
+			}
+<span class="nc" id="L244">		});</span>
+<span class="nc" id="L245">		relationList.addAll(affialiateDataList);</span>
+<span class="nc" id="L246">	}</span>
+
+	/**
+	 * @param entityId
+	 * @param relationList
+	 * @param subsidary
+	 * @param childrenEntityId2List
+	 */
+	private void listAPILevelTwoData(String entityId, List&lt;EntityRelationshipType&gt; relationList,
+			LosConfigDetails subsidary, List&lt;String&gt; childrenEntityId2List) {
+<span class="nc" id="L256">		List&lt;EntityRelationshipType&gt; getSubsidaryRelation = entityRelationshipTypeRepository</span>
+<span class="nc" id="L257">				.findByEntityId2CAndEnityId1CInreverse(childrenEntityId2List);</span>
+<span class="nc" id="L258">		getSubsidaryRelation.stream().forEach(changeRelation -&gt; {</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">			if (!changeRelation.getEntityId2().equals(entityId)) {</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">				if ((changeRelation.getEntityId1().endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">						&amp;&amp; changeRelation.getEntityId2().endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE))</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">						&amp;&amp; (getRelationTypeId(changeRelation).equals(LOSEntityConstants.OWNER)</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">								|| getRelationTypeId(changeRelation).equals(LOSEntityConstants.SUBSIDIARY))) {</span>
+<span class="nc" id="L264">					changeRelation.setEntityRelationConfigDetail(subsidary);</span>
+<span class="nc" id="L265">					relationList.add(changeRelation);</span>
+				}
+			}
+<span class="nc" id="L268">		});</span>
+<span class="nc" id="L269">		childrenEntityId2List.forEach(getchild -&gt; {</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">			if (getchild.endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)) {</span>
+<span class="nc" id="L271">				List&lt;EntityRelationshipType&gt; getOtherRelation = entityRelationshipTypeRepository</span>
+<span class="nc" id="L272">						.findByEntityId1AndDeletedAndStatus(Arrays.asList(getchild));</span>
+<span class="nc" id="L273">				getOtherRelation.stream().forEach(getAffiliateData -&gt; {</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">					if (!getRelationTypeId(getAffiliateData).equals(LOSEntityConstants.OWNER)</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">							|| !getRelationTypeId(getAffiliateData).equals(LOSEntityConstants.SUBSIDIARY)) {</span>
+<span class="nc" id="L276">						relationList.add(getAffiliateData);</span>
+					}
+<span class="nc" id="L278">				});</span>
+			}
+<span class="nc" id="L280">		});</span>
+<span class="nc" id="L281">	}</span>
+
+	/**
+	 * Method to change TheRelationDataOfOwnedCompanies for the entityIds
+	 * 
+	 * @param entityId
+	 * @param affilated
+	 * @param affialiateDataList
+	 * @param parentEntity
+	 * @param changeRelation
+	 */
+	private void changeTheRelationDataOfOwnedCompanies(String entityId, LosConfigDetails affilated,
+			List&lt;EntityRelationshipType&gt; affialiateDataList, CommercialEntity parentEntity,
+			EntityRelationshipType changeRelation) {
+<span class="nc bnc" id="L295" title="All 2 branches missed.">		if (changeRelation.getEntityId1().equals(entityId)) {</span>
+<span class="nc" id="L296">			BeanUtils.copyProperties(changeRelation.getParentEntity(), parentEntity);</span>
+		}
+<span class="nc bnc" id="L298" title="All 2 branches missed.">		if (!changeRelation.getEntityId1().equals(entityId)</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">				&amp;&amp; changeRelation.getEntityId1().endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">				&amp;&amp; getRelationTypeId(changeRelation).equals(LOSEntityConstants.OWNED)) {</span>
+<span class="nc" id="L301">			changeRelation.setEntityId2(changeRelation.getEntityId1());</span>
+<span class="nc" id="L302">			changeRelation.setChildEntity(changeRelation.getParentEntity());</span>
+<span class="nc" id="L303">			changeRelation.setEntityId1(entityId);</span>
+<span class="nc" id="L304">			changeRelation.setParentEntity(parentEntity);</span>
+<span class="nc" id="L305">			changeRelation.setEntityRelationConfigDetail(affilated);</span>
+<span class="nc" id="L306">			affialiateDataList.add(changeRelation);</span>
+		}
+<span class="nc" id="L308">	}</span>
+
+	/**
+	 * Method to change the Relationship for list Api for changing the relation.
+	 * 
+	 * @param relationList
+	 * @param owner
+	 * @param owned
+	 * @param subsidary
+	 * @param changingRelation
+	 */
+	private void changeRelationshipListApi(List&lt;EntityRelationshipType&gt; relationList, LosConfigDetails owner,
+			LosConfigDetails owned, LosConfigDetails subsidary, EntityRelationshipType changingRelation) {
+<span class="nc" id="L321">		Long relationTypeId = getRelationTypeId(changingRelation);</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">		if (changingRelation.getEntityId1().endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">				&amp;&amp; changingRelation.getEntityId1().endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">				&amp;&amp; relationTypeId.equals(LOSEntityConstants.OWNER)) {</span>
+<span class="nc" id="L325">			changingRelation.setEntityRelationConfigDetail(subsidary);</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">		} else if (relationTypeId.equals(LOSEntityConstants.OWNER)) {</span>
+<span class="nc" id="L327">			changingRelation.setEntityRelationConfigDetail(owned);</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">		} else if (relationTypeId.equals(LOSEntityConstants.OWNED)) {</span>
+<span class="nc" id="L329">			changingRelation.setEntityRelationConfigDetail(owner);</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">		} else if (relationTypeId.equals(LOSEntityConstants.SUBSIDIARY)) {</span>
+<span class="nc" id="L331">			changingRelation.setEntityRelationConfigDetail(owner);</span>
+		}
+<span class="nc" id="L333">		relationList.add(changingRelation);</span>
+<span class="nc" id="L334">	}</span>
+
+	/**
+	 * Method to find the Data if parentNotPresent for Given entityId
+	 * 
+	 * @param entityId
+	 * @param relationList
+	 * @param owner
+	 * @param affilated
+	 * @param subsidary
+	 * @param commercialEntityId2List
+	 * @param cToCRelation
+	 * @param iToCRelation
+	 * @param parentEntity
+	 * @param parents
+	 */
+	private void parentNotPresent(String entityId, List&lt;EntityRelationshipType&gt; relationList, LosConfigDetails owner,
+			LosConfigDetails affilated, LosConfigDetails subsidary, List&lt;String&gt; commercialEntityId2List,
+			List&lt;String&gt; cToCRelation, List&lt;String&gt; iToCRelation, CommercialEntity parentEntity,
+			List&lt;EntityRelationshipType&gt; parents) {
+<span class="nc" id="L354">		parents.forEach(parentsEntityId2 -&gt; {</span>
+<span class="nc" id="L355">			getLevelOneEntityData(entityId, commercialEntityId2List, cToCRelation, parentEntity, parentsEntityId2);</span>
+<span class="nc" id="L356">		});</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">		if (!commercialEntityId2List.isEmpty()) {</span>
+<span class="nc" id="L358">			listAPILevelTwoData(entityId, relationList, subsidary, commercialEntityId2List);</span>
+		}
+<span class="nc bnc" id="L360" title="All 2 branches missed.">		if (!cToCRelation.isEmpty()) {</span>
+<span class="nc" id="L361">			List&lt;EntityRelationshipType&gt; getOwners = entityRelationshipTypeRepository</span>
+<span class="nc" id="L362">					.findByEntityId2CAndEnityId1IInReverse(cToCRelation);</span>
+<span class="nc" id="L363">			getOwners.stream().forEach(changeRelation -&gt; {</span>
+<span class="nc bnc" id="L364" title="All 2 branches missed.">				if (getRelationTypeId(changeRelation).equals(LOSEntityConstants.OWNED)) {</span>
+<span class="nc" id="L365">					iToCRelation.add(changeRelation.getEntityId2());</span>
+<span class="nc" id="L366">					changeRelation.setEntityRelationConfigDetail(owner);</span>
+<span class="nc" id="L367">					relationList.add(changeRelation);</span>
+				}
+<span class="nc" id="L369">			});</span>
+<span class="nc" id="L370">			List&lt;EntityRelationshipType&gt; getOtherRelation = entityRelationshipTypeRepository</span>
+<span class="nc" id="L371">					.findByEntityId1AndDeletedAndStatus(cToCRelation);</span>
+<span class="nc bnc" id="L372" title="All 2 branches missed.">			if (!getOtherRelation.isEmpty()) {</span>
+<span class="nc" id="L373">				relationList.addAll(getOtherRelation);</span>
+			}
+		}
+<span class="nc bnc" id="L376" title="All 2 branches missed.">		if (!iToCRelation.isEmpty()) {</span>
+<span class="nc" id="L377">			List&lt;EntityRelationshipType&gt; getOwnersOtherCompanies = entityRelationshipTypeRepository</span>
+<span class="nc" id="L378">					.findByEntityId1IAndReturnCListInreverse(iToCRelation);</span>
+<span class="nc" id="L379">			getOwnersOtherCompanies.stream().forEach(changeRelation -&gt; {</span>
+<span class="nc" id="L380">				usingLevelThreeDataChangingToAffiliated(entityId, relationList, affilated, cToCRelation, parentEntity,</span>
+						changeRelation);
+<span class="nc" id="L382">			});</span>
+		}
+<span class="nc" id="L384">	}</span>
+
+	/**
+	 * By using the level 3 data and finding the the Owned companies of Individual
+	 * Entities making Affiliated
+	 * 
+	 * @param entityId
+	 * @param relationList
+	 * @param affilated
+	 * @param cToCRelation
+	 * @param parentEntity
+	 * @param changeRelation
+	 */
+	private void usingLevelThreeDataChangingToAffiliated(String entityId, List&lt;EntityRelationshipType&gt; relationList,
+			LosConfigDetails affilated, List&lt;String&gt; cToCRelation, CommercialEntity parentEntity,
+			EntityRelationshipType changeRelation) {
+<span class="nc bnc" id="L400" title="All 4 branches missed.">		if (!changeRelation.getEntityId1().equals(entityId) &amp;&amp; !cToCRelation.contains(changeRelation.getEntityId1())</span>
+<span class="nc bnc" id="L401" title="All 2 branches missed.">				&amp;&amp; getRelationTypeId(changeRelation).equals(LOSEntityConstants.OWNED)) {</span>
+<span class="nc" id="L402">			changeRelation.setEntityId2(changeRelation.getEntityId1());</span>
+<span class="nc" id="L403">			changeRelation.setChildEntity(changeRelation.getParentEntity());</span>
+<span class="nc" id="L404">			changeRelation.setEntityId1(entityId);</span>
+<span class="nc" id="L405">			changeRelation.setParentEntity(parentEntity);</span>
+<span class="nc" id="L406">			changeRelation.setEntityRelationConfigDetail(affilated);</span>
+<span class="nc" id="L407">			relationList.add(changeRelation);</span>
+		}
+<span class="nc" id="L409">	}</span>
+
+	/**
+	 * Method to getLevelOneEntityData
+	 * 
+	 * @param entityId
+	 * @param commercialEntityId2List
+	 * @param cToCRelation
+	 * @param parentEntity
+	 * @param parentsEntityId2
+	 */
+	private void getLevelOneEntityData(String entityId, List&lt;String&gt; commercialEntityId2List, List&lt;String&gt; cToCRelation,
+			CommercialEntity parentEntity, EntityRelationshipType parentsEntityId2) {
+<span class="nc bnc" id="L422" title="All 2 branches missed.">		if (parentsEntityId2.getEntityId1().endsWith(LOSEntityConstants.INDIVIDUAL_SUFFIX_CODE)</span>
+<span class="nc bnc" id="L423" title="All 2 branches missed.">				&amp;&amp; parentsEntityId2.getEntityId2().endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="nc bnc" id="L424" title="All 2 branches missed.">				|| parentsEntityId2.getEntityId1().endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="nc bnc" id="L425" title="All 2 branches missed.">						&amp;&amp; parentsEntityId2.getEntityId2().endsWith(LOSEntityConstants.INDIVIDUAL_SUFFIX_CODE)</span>
+<span class="nc bnc" id="L426" title="All 2 branches missed.">				|| parentsEntityId2.getEntityId1().endsWith(LOSEntityConstants.INDIVIDUAL_SUFFIX_CODE)</span>
+<span class="nc bnc" id="L427" title="All 2 branches missed.">						&amp;&amp; parentsEntityId2.getEntityId2().endsWith(LOSEntityConstants.INDIVIDUAL_SUFFIX_CODE)) {</span>
+<span class="nc" id="L428">			commercialEntityId2List.add(parentsEntityId2.getEntityId2());</span>
+<span class="nc bnc" id="L429" title="All 2 branches missed.">		} else if (parentsEntityId2.getEntityId1().endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="nc bnc" id="L430" title="All 2 branches missed.">				&amp;&amp; parentsEntityId2.getEntityId2().endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)) {</span>
+<span class="nc" id="L431">			cToCRelation.add(parentsEntityId2.getEntityId2());</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">			if (parentsEntityId2.getEntityId1().equals(entityId)) {</span>
+<span class="nc" id="L433">				BeanUtils.copyProperties(parentsEntityId2.getParentEntity(), parentEntity);</span>
+			}
+		}
+<span class="nc" id="L436">	}</span>
+
+	/**
+	 * Method to return the RelationTypeId
+	 * 
+	 * @param changingRelation
+	 * @return
+	 */
+	private Long getRelationTypeId(EntityRelationshipType changingRelation) {
+<span class="fc" id="L445">		return changingRelation.getEntityRelationConfigDetail().getConfigId();</span>
+	}
+
+	/**
+	 * Method updateEntityRelaton
+	 */
+	@Override
+	public Long updateEntityRelaton(Long id, EntityRelationshipType entityRelationshipType) {
+<span class="fc" id="L453">		LOG.debug(&quot;updating EntityRelaton&quot;);</span>
+<span class="fc" id="L454">		clientValidator.isValidClient(entityRelationshipType);</span>
+<span class="fc" id="L455">		EntityRelationshipType relation = entityRelationshipTypeRepository.findById(id)</span>
+<span class="fc" id="L456">				.orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Entity relationshiptype id not found: &quot; + id));</span>
+<span class="fc bfc" id="L457" title="All 2 branches covered.">		if (relation.isDeleted() == Boolean.TRUE) {</span>
+<span class="fc" id="L458">			errorMsgs.getMessage(INVALID_RELATIONTYPE_ID, new Object[] { id }, CommonUtils.getLocale());</span>
+		}
+<span class="fc bfc" id="L460" title="All 2 branches covered.">		if (entityRelationshipType.getEntityRelationConfigDetail() == null) {</span>
+<span class="fc" id="L461">			throw new BadRequestException(&quot;Please provide entityRelationConfigDetail&quot;);</span>
+		}
+<span class="pc bpc" id="L463" title="2 of 4 branches missed.">		if (getEntityRelationId(entityRelationshipType) == 0 || getEntityRelationId(entityRelationshipType) == null) {</span>
+<span class="nc" id="L464">			throw new BadRequestException(&quot;configId Cannot be 0 or Null&quot;);</span>
+		}
+<span class="pc bpc" id="L466" title="1 of 2 branches missed.">		if (entityRelationshipType.getOwnership() == null) {</span>
+<span class="fc" id="L467">			throw new BadRequestException(&quot;Please Provide Ownership Details&quot;);</span>
+		}
+<span class="nc" id="L469">		LosConfigDetails entityRelationConfigDetails = configLookupRepository</span>
+<span class="nc" id="L470">				.findById(getEntityRelationId(entityRelationshipType)).orElseThrow(() -&gt; new BadRequestException(</span>
+<span class="nc" id="L471">						errorMsgs.getMessage(INVALID_RELATION_TYPE_ID, null, CommonUtils.getLocale())));</span>
+<span class="nc bnc" id="L472" title="All 2 branches missed.">		if (!entityRelationConfigDetails.getConfigtypeCode().equals(LOSEntityConstants.ENTITY_RELATION_TYPE_CODE)) {</span>
+<span class="nc" id="L473">			throw new BadRequestException(</span>
+<span class="nc" id="L474">					errorMsgs.getMessage(INVALID_RELATION_TYPE_ID, null, CommonUtils.getLocale()));</span>
+		}
+<span class="nc bnc" id="L476" title="All 2 branches missed.">		if (entityRelationshipType.getEntityId2().equals(relation.getEntityId2())</span>
+<span class="nc bnc" id="L477" title="All 2 branches missed.">				&amp;&amp; getRelationTypeId(entityRelationshipType).equals(getRelationTypeId(relation))) {</span>
+<span class="nc" id="L478">			entityRelationshipValidator.validateEntityRelationCombination(relation.getEntityId1(),</span>
+					entityRelationshipType);
+<span class="nc" id="L480">			mapValuesUpdateRelationship(entityRelationshipType, relation);</span>
+<span class="nc" id="L481">			return entityRelationshipTypeRepository.save(entityRelationshipType).getRelationshiptypeId();</span>
+		} else {
+<span class="nc" id="L483">			return updateReverseRelation(entityRelationshipType, relation);</span>
+		}
+	}
+
+	/**
+	 * updateReverseRelation
+	 * 
+	 * @param entityRelationshipType
+	 * @param relation
+	 * @return
+	 */
+	private Long updateReverseRelation(EntityRelationshipType entityRelationshipType, EntityRelationshipType relation) {
+<span class="nc" id="L495">		entityRelationshipValidator.validateEntityRelationCombination(relation.getEntityId2(), entityRelationshipType);</span>
+<span class="nc" id="L496">		mapValuesUpdateRelationship(entityRelationshipType, relation);</span>
+<span class="nc bnc" id="L497" title="All 2 branches missed.">		if (relation.getEntityId1().endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="nc bnc" id="L498" title="All 2 branches missed.">				&amp;&amp; relation.getEntityId2().endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)) {</span>
+<span class="nc bnc" id="L499" title="All 2 branches missed.">			if (!entityRelationshipType.getRelationshiptypeId().equals(LOSEntityConstants.AFFILIATED)) {</span>
+<span class="nc bnc" id="L500" title="All 2 branches missed.">				if (entityRelationshipType.getRelationshiptypeId().equals(LOSEntityConstants.SUBSIDIARY)</span>
+<span class="nc bnc" id="L501" title="All 2 branches missed.">						&amp;&amp; relation.getRelationshiptypeId().equals(LOSEntityConstants.SUBSIDIARY)) {</span>
+<span class="nc" id="L502">					entityRelationshipType.setRelationshiptypeId(LOSEntityConstants.OWNER);</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">				} else if (entityRelationshipType.getRelationshiptypeId().equals(LOSEntityConstants.OWNER)</span>
+<span class="nc bnc" id="L504" title="All 2 branches missed.">						&amp;&amp; relation.getRelationshiptypeId().equals(LOSEntityConstants.OWNER)</span>
+<span class="nc bnc" id="L505" title="All 2 branches missed.">						|| entityRelationshipType.getRelationshiptypeId().equals(LOSEntityConstants.SUBSIDIARY)</span>
+<span class="nc bnc" id="L506" title="All 2 branches missed.">								&amp;&amp; relation.getRelationshiptypeId().equals(LOSEntityConstants.OWNER)) {</span>
+<span class="nc" id="L507">					entityRelationshipType.setRelationshiptypeId(LOSEntityConstants.SUBSIDIARY);</span>
+				}
+			}
+<span class="nc" id="L510">			return entityRelationshipTypeRepository.save(entityRelationshipType).getRelationshiptypeId();</span>
+		} else {
+<span class="nc" id="L512">			entityRelationshipType.setRelationshiptypeId(relation.getRelationshiptypeId());</span>
+<span class="nc" id="L513">			return entityRelationshipTypeRepository.save(entityRelationshipType).getRelationshiptypeId();</span>
+		}
+	}
+
+	/**
+	 * method to Map Values for UpdateRelationship
+	 * 
+	 * @param entityRelationshipType
+	 * @param relation
+	 */
+	private void mapValuesUpdateRelationship(EntityRelationshipType entityRelationshipType,
+			EntityRelationshipType relation) {
+<span class="nc" id="L525">		entityRelationshipType.setEntityRelationshiptypeId(relation.getEntityRelationshiptypeId());</span>
+<span class="nc" id="L526">		entityRelationshipType.setEntityId1(relation.getEntityId1());</span>
+<span class="nc" id="L527">		entityRelationshipType.setEntityId2(relation.getEntityId2());</span>
+<span class="nc" id="L528">	}</span>
+
+	/**
+	 * Method to Deactivate EntityRelationship
+	 */
+	@Override
+	public void deactivateEntityRelationship(Long id) {
+<span class="fc" id="L535">		entityRelationshipTypeRepository.deactivateEntityRelationship(id);</span>
+<span class="fc" id="L536">	}</span>
+
+	/**
+	 * Method to Activate EntityRelationship
+	 */
+	@Override
+	public void activateEntityRelationship(Long id) {
+<span class="fc" id="L543">		entityRelationshipTypeRepository.activateEntityRelationship(id);</span>
+<span class="fc" id="L544">	}</span>
+
+	/**
+	 * Method to Find the children count of given entityId
+	 */
+	@Override
+	public Long findChildEntityCount(String entityId) {
+<span class="fc" id="L551">		return parentEntityNodeRepository.countByParentIdAndActive(entityId, true);</span>
+	}
+
+	/**
+	 * Method to Find the parents count of given entityId
+	 */
+	@Override
+	public Long findParentEntityCount(String entityId) {
+<span class="fc" id="L559">		return childEntityNodeRepository.countByParentIdAndActive(entityId, true);</span>
+	}
+
+	/**
+	 * Method to Get Entity Relationship Tree
+	 * &lt;p&gt;
+	 * Method findEntityRelationTreeByParentEntityId based on given entity check the
+	 * type of relation. checks: 1.commercial to commercial owner relation if not
+	 * present 2. The given entity is having parent(if present parentCount==0) or
+	 * not (if present parentCount &gt; 0) finally it forms the tree using
+	 * createTreeFromParent method and return the tree data
+	 * &lt;/p&gt;
+	 */
+	@Override
+	public ParentEntityNode findEntityRelationTreeByParentEntityId(String entityId) {
+<span class="nc" id="L574">		LosConfigDetails owner = configLookupRepository.findByConfigId(LOSEntityConstants.OWNER);</span>
+<span class="nc" id="L575">		LosConfigDetails owned = configLookupRepository.findByConfigId(LOSEntityConstants.OWNED);</span>
+<span class="nc" id="L576">		LosConfigDetails affilated = configLookupRepository.findByConfigId(LOSEntityConstants.AFFILIATED);</span>
+<span class="nc" id="L577">		LosConfigDetails subsidary = configLookupRepository.findByConfigId(LOSEntityConstants.SUBSIDIARY);</span>
+<span class="nc" id="L578">		String commercialSuffix = LOSEntityConstants.COMMERCIAL_SUFFIX_CODE;</span>
+<span class="nc" id="L579">		Long parentCount = findParentEntityCount(entityId);</span>
+<span class="nc" id="L580">		List&lt;EntityRelationshipType&gt; relationDetails = entityRelationshipTypeRepository</span>
+<span class="nc" id="L581">				.findByEntityId1AndDeleted(Arrays.asList(entityId));</span>
+<span class="nc bnc" id="L582" title="All 2 branches missed.">		if (!relationDetails.isEmpty()) {</span>
+<span class="nc" id="L583">			List&lt;String&gt; iterationChildIds = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L584">			List&lt;EntityRelationshipType&gt; isOwnerRelation = relationDetails.stream().filter(</span>
+<span class="nc" id="L585">					checkRelationType -&gt; getEntityRelationId(checkRelationType).equals(LOSEntityConstants.OWNER))</span>
+<span class="nc" id="L586">					.collect(Collectors.toList());</span>
+<span class="nc bnc" id="L587" title="All 2 branches missed.">			if (!isOwnerRelation.isEmpty()) {</span>
+<span class="nc" id="L588">				List&lt;String&gt; entityIds = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L589">				List&lt;ParentEntityNode&gt; treeData = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L590">				List&lt;String&gt; levelTwoChildIds = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L591" title="All 2 branches missed.">				for (EntityRelationshipType eachRelation : relationDetails) {</span>
+<span class="nc bnc" id="L592" title="All 2 branches missed.">					if (getEntityRelationId(eachRelation).equals(LOSEntityConstants.OWNER)</span>
+<span class="nc bnc" id="L593" title="All 2 branches missed.">							&amp;&amp; eachRelation.getEntityId1().endsWith(commercialSuffix)</span>
+<span class="nc bnc" id="L594" title="All 2 branches missed.">							&amp;&amp; eachRelation.getEntityId2().endsWith(commercialSuffix)) {</span>
+<span class="nc" id="L595">						entityIds.add(eachRelation.getEntityId2());</span>
+<span class="nc" id="L596">						List&lt;ParentEntityNode&gt; rootData = parentEntityNodeRepository.findEntityTreeData(entityId);</span>
+<span class="nc" id="L597">						treeData.addAll(rootData);</span>
+					}
+<span class="nc bnc" id="L599" title="All 2 branches missed.">					if (!entityIds.isEmpty()) {</span>
+<span class="nc" id="L600">						return cToCOwnerCheckLeveOneHavingParentOrChildren(entityId, owner, affilated, commercialSuffix, // NOSONAR</span>
+								iterationChildIds, entityIds, treeData, levelTwoChildIds);// NOSONAR
+					}
+<span class="nc" id="L603">				}</span>
+			}
+		}
+<span class="nc bnc" id="L606" title="All 2 branches missed.">		if (parentCount == 0) {</span>
+<span class="nc" id="L607">			List&lt;ParentEntityNode&gt; treeData = entityParentIsNotPresent(entityId, subsidary, affilated, owner,</span>
+					commercialSuffix);
+<span class="nc" id="L609">			return entityRelationshipTreeServiceImpl.createTreeFromParent(treeData, entityId);</span>
+<span class="nc bnc" id="L610" title="All 2 branches missed.">		} else if (parentCount &gt; 0) {</span>
+<span class="nc" id="L611">			List&lt;ParentEntityNode&gt; treeData = entityParentIsPresent(entityId, owner, owned, affilated, subsidary,</span>
+					commercialSuffix);
+<span class="nc" id="L613">			return entityRelationshipTreeServiceImpl.createTreeFromParent(treeData, entityId);</span>
+		}
+<span class="nc" id="L615">		List&lt;ParentEntityNode&gt; parentEntityNode = parentEntityNodeRepository.findEntityTreeData(entityId);</span>
+<span class="nc" id="L616">		return entityRelationshipTreeServiceImpl.createTreeFromParent(parentEntityNode, entityId);</span>
+	}
+
+	/**
+	 * &lt;p&gt;
+	 * In this method Commercial to commercial having Owner Relation for the given
+	 * entity. given entity having the child then get those (commercial entity)
+	 * child if present goes to levelTwoCToCOwnerGetComEntitySetAsAffiliated(method)
+	 * after that it returns the tree data.
+	 * &lt;/p&gt;
+	 * 
+	 * @param entityId
+	 * @param owner
+	 * @param affilated
+	 * @param commercialSuffix
+	 * @param iterationChildIds
+	 * @param entityIds
+	 * @param treeData
+	 * @param levelTwoChildIds
+	 * @return
+	 */
+	private ParentEntityNode cToCOwnerCheckLeveOneHavingParentOrChildren(String entityId, LosConfigDetails owner, // NOSONAR
+			LosConfigDetails affilated, String commercialSuffix, List&lt;String&gt; iterationChildIds, List&lt;String&gt; entityIds, // NOSONAR
+			List&lt;ParentEntityNode&gt; treeData, List&lt;String&gt; levelTwoChildIds) {// NOSONAR
+<span class="nc" id="L640">		List&lt;ParentEntityNode&gt; levelOneData = getParentDataReverseOrder(entityIds);</span>
+<span class="nc" id="L641">		levelOneData.stream().forEach(removeExisting -&gt; cToCOwnerIfOwnedIsPresentChangeToOwner(entityId, owner,</span>
+				treeData, levelTwoChildIds, removeExisting));
+<span class="nc bnc" id="L643" title="All 2 branches missed.">		if (!levelTwoChildIds.isEmpty()) {</span>
+<span class="nc" id="L644">			levelTwoCToCOwnerGetComEntitySetAsAffiliated(entityId, owner, affilated, commercialSuffix, // NOSONAR</span>
+					iterationChildIds, entityIds, treeData, levelTwoChildIds);// NOSONAR
+		}
+<span class="nc" id="L647">		return entityRelationshipTreeServiceImpl.createTreeFromParent(treeData, entityId);</span>
+	}
+
+	/**
+	 * &lt;p&gt;
+	 * In this method Commercial to commercial having Owner Relation for the given
+	 * entity is true, (method) cToCOwnerCheckLeveOneHavingParentOrChildren calls
+	 * this method if level one(commercial entity) if this entity is owned by other
+	 * individual entity then change to owner relation and collects their child
+	 * which not present in tree data if any commercial entity is found make it as
+	 * affiliated to the root node(rootEntity/or 0th level entity) and get their
+	 * parent if present add it as owner for that affiliated entity's
+	 * &lt;/p&gt;
+	 * 
+	 * @param entityId
+	 * @param owner
+	 * @param affilated
+	 * @param commercialSuffix
+	 * @param iterationChildIds
+	 * @param entityIds
+	 * @param treeData
+	 * @param levelTwoChildIds
+	 */
+	private void levelTwoCToCOwnerGetComEntitySetAsAffiliated(String entityId, LosConfigDetails owner, // NOSONAR
+			LosConfigDetails affilated, String commercialSuffix, List&lt;String&gt; iterationChildIds, List&lt;String&gt; entityIds, // NOSONAR
+			List&lt;ParentEntityNode&gt; treeData, List&lt;String&gt; levelTwoChildIds) { // NOSONAR
+<span class="nc" id="L673">		List&lt;ParentEntityNode&gt; levelTwoData = parentEntityNodeRepository.findChildEntityData(levelTwoChildIds);</span>
+<span class="nc bnc" id="L674" title="All 2 branches missed.">		if (!levelTwoData.isEmpty()) {</span>
+<span class="nc" id="L675">			levelTwoData.stream().forEach(entites -&gt; {</span>
+<span class="nc bnc" id="L676" title="All 4 branches missed.">				if (!entityIds.contains(entites.getChildId()) &amp;&amp; !levelTwoChildIds.contains(entites.getChildId())</span>
+<span class="nc bnc" id="L677" title="All 2 branches missed.">						&amp;&amp; !iterationChildIds.contains(entites.getChildId())</span>
+<span class="nc bnc" id="L678" title="All 2 branches missed.">						&amp;&amp; getConfigId(entites).equals(LOSEntityConstants.OWNED)) {</span>
+<span class="nc" id="L679">					iterationChildIds.add(entites.getChildId());</span>
+<span class="nc" id="L680">					entites.setParentId(entityId);</span>
+<span class="nc bnc" id="L681" title="All 2 branches missed.">					if (entites.getChildId().endsWith(commercialSuffix)) {</span>
+<span class="nc" id="L682">						entites.setLosConfigDetails(affilated);</span>
+					}
+<span class="nc" id="L684">					List&lt;ParentEntityNode&gt; levelThreeData = getParentDataReverseOrder(</span>
+<span class="nc" id="L685">							Arrays.asList(entites.getChildId()));</span>
+<span class="nc" id="L686">					levelThreeData.stream().forEach(setChildrenNull -&gt; {</span>
+<span class="nc bnc" id="L687" title="All 2 branches missed.">						if (getConfigId(setChildrenNull).equals(LOSEntityConstants.OWNED)) {</span>
+<span class="nc" id="L688">							setChildrenNull.setLosConfigDetails(owner);</span>
+<span class="nc" id="L689">							setChildrenNull.setChildren(Arrays.asList());</span>
+<span class="nc" id="L690">							treeData.add(setChildrenNull);</span>
+						}
+<span class="nc" id="L692">					});</span>
+<span class="nc" id="L693">					treeData.add(entites);</span>
+				}
+<span class="nc" id="L695">			});</span>
+		}
+<span class="nc" id="L697">	}</span>
+
+	/**
+	 * &lt;p&gt;
+	 * Method validates the given EntityId should not present in between the tree
+	 * data. if relation is having the Owned then changing that relation into Owner
+	 * and set their children to empty List.
+	 * &lt;/p&gt;
+	 * 
+	 * @param entityId
+	 * @param owner
+	 * @param treeData
+	 * @param levelTwoChildIds
+	 * @param removeExisting
+	 */
+	private void cToCOwnerIfOwnedIsPresentChangeToOwner(String entityId, LosConfigDetails owner,
+			List&lt;ParentEntityNode&gt; treeData, List&lt;String&gt; levelTwoChildIds, ParentEntityNode removeExisting) {
+<span class="nc bnc" id="L714" title="All 2 branches missed.">		if (!removeExisting.getChildId().equals(entityId)) {</span>
+<span class="nc" id="L715">			levelTwoChildIds.add(removeExisting.getChildId());</span>
+<span class="nc bnc" id="L716" title="All 2 branches missed.">			if (getConfigId(removeExisting).equals(LOSEntityConstants.OWNED)) {</span>
+<span class="nc" id="L717">				removeExisting.setLosConfigDetails(owner);</span>
+<span class="nc" id="L718">				removeExisting.setChildren(Arrays.asList());</span>
+			}
+<span class="nc" id="L720">			treeData.add(removeExisting);</span>
+		}
+<span class="nc" id="L722">	}</span>
+
+	/**
+	 * Method called by findEntityRelationTreeByParentEntityId(method)
+	 * &lt;p&gt;
+	 * if given entityParentIsNotPresent collect their child entityIds if individual
+	 * entityId is present set their children as emptyList and if the child
+	 * enittyIds present then pass those childIds to
+	 * entityParentIsNotPresentGetFirstLevelsChildren(method) after the method is
+	 * performed then add to the treeData and return the treeData
+	 * &lt;/p&gt;
+	 * 
+	 * @param entityId
+	 * @param subsidary
+	 * @param commercialSuffix
+	 * @return
+	 */
+	private List&lt;ParentEntityNode&gt; entityParentIsNotPresent(String entityId, LosConfigDetails subsidary,
+			LosConfigDetails affilated, LosConfigDetails owner, String commercialSuffix) {
+<span class="nc" id="L741">		List&lt;ParentEntityNode&gt; treeData = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L742">		List&lt;String&gt; levelTwoChildIds = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L743">		List&lt;ParentEntityNode&gt; parentEntityNode = parentEntityNodeRepository</span>
+<span class="nc" id="L744">				.findChildEntityData(Arrays.asList(entityId));</span>
+<span class="nc bnc" id="L745" title="All 2 branches missed.">		if (!parentEntityNode.isEmpty()) {</span>
+<span class="nc" id="L746">			List&lt;String&gt; childIds = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L747">			List&lt;String&gt; individualChildIds = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L748">			parentEntityNode.stream().forEach(entity -&gt; {</span>
+<span class="nc bnc" id="L749" title="All 2 branches missed.">				if (entity.getChildId().endsWith(commercialSuffix)) {</span>
+<span class="nc" id="L750">					childIds.add(entity.getChildId());</span>
+				} else {
+<span class="nc" id="L752">					individualChildIds.add(entity.getChildId());</span>
+<span class="nc" id="L753">					entity.setChildren(Arrays.asList());</span>
+				}
+<span class="nc" id="L755">			});</span>
+<span class="nc bnc" id="L756" title="All 2 branches missed.">			if (!childIds.isEmpty()) {</span>
+<span class="nc" id="L757">				entityParentIsNotPresentGetFirstLevelsChildren(subsidary, commercialSuffix, treeData, childIds);</span>
+			}
+<span class="nc bnc" id="L759" title="All 2 branches missed.">			if (!individualChildIds.isEmpty()) {</span>
+<span class="nc" id="L760">				List&lt;ParentEntityNode&gt; levelOneData = parentEntityNodeRepository</span>
+<span class="nc" id="L761">						.findChildEntityData(individualChildIds);</span>
+<span class="nc bnc" id="L762" title="All 2 branches missed.">				if (!levelOneData.isEmpty()) {</span>
+<span class="nc" id="L763">					levelOneData.stream().forEach(entites -&gt; {</span>
+<span class="nc bnc" id="L764" title="All 2 branches missed.">						if (!individualChildIds.contains(entites.getChildId())</span>
+<span class="nc bnc" id="L765" title="All 2 branches missed.">								&amp;&amp; !levelTwoChildIds.contains(entites.getChildId())</span>
+<span class="nc bnc" id="L766" title="All 2 branches missed.">								&amp;&amp; entityId.endsWith(commercialSuffix)</span>
+<span class="nc bnc" id="L767" title="All 2 branches missed.">								&amp;&amp; getConfigId(entites).equals(LOSEntityConstants.OWNED)) {</span>
+<span class="nc" id="L768">							entites.setParentId(entityId);</span>
+<span class="nc bnc" id="L769" title="All 2 branches missed.">							if (entites.getChildId().endsWith(commercialSuffix)) {</span>
+<span class="nc" id="L770">								entites.setLosConfigDetails(affilated);</span>
+<span class="nc" id="L771">								entites.setChildren(Arrays.asList());</span>
+<span class="nc" id="L772">								parentEntityNode.add(entites);</span>
+							}
+						}
+<span class="nc" id="L775">					});</span>
+				}
+			}
+		}
+<span class="nc" id="L779">		treeData.addAll(parentEntityNode);</span>
+<span class="nc" id="L780">		return treeData;</span>
+	}
+
+	/**
+	 * &lt;p&gt;
+	 * This method is called by entityParentIsNotPresent(method), getting the
+	 * levelOne entityIds and and iterating to one more level and iterating and
+	 * changing the relation having Owned to subsidary and adding that data to
+	 * treeData list.
+	 * &lt;/p&gt;
+	 * 
+	 * @param subsidary
+	 * @param commercialSuffix
+	 * @param treeData
+	 * @param childIds
+	 */
+	private void entityParentIsNotPresentGetFirstLevelsChildren(LosConfigDetails subsidary, String commercialSuffix,
+			List&lt;ParentEntityNode&gt; treeData, List&lt;String&gt; childIds) {
+<span class="nc" id="L798">		List&lt;ParentEntityNode&gt; levelOneData = getParentDataReverseOrder(childIds);</span>
+<span class="nc bnc" id="L799" title="All 2 branches missed.">		if (!levelOneData.isEmpty()) {</span>
+<span class="nc" id="L800">			List&lt;ParentEntityNode&gt; list = levelOneData.stream()</span>
+<span class="nc bnc" id="L801" title="All 2 branches missed.">					.filter(getRelation -&gt; getConfigId(getRelation).equals(LOSEntityConstants.OWNER)</span>
+<span class="nc bnc" id="L802" title="All 2 branches missed.">							&amp;&amp; getRelation.getChildId().endsWith(commercialSuffix))</span>
+<span class="nc" id="L803">					.collect(Collectors.toList());</span>
+<span class="nc bnc" id="L804" title="All 2 branches missed.">			if (!list.isEmpty()) {</span>
+<span class="nc bnc" id="L805" title="All 2 branches missed.">				for (ParentEntityNode eachParentEntityNode : list) {</span>
+<span class="nc" id="L806">					eachParentEntityNode.setLosConfigDetails(subsidary);</span>
+<span class="nc" id="L807">					eachParentEntityNode.setChildren(Arrays.asList());</span>
+<span class="nc" id="L808">					treeData.add(eachParentEntityNode);</span>
+<span class="nc" id="L809">				}</span>
+			}
+		}
+<span class="nc" id="L812">	}</span>
+
+	/**
+	 * Method called by findEntityRelationTreeByParentEntityId(method)
+	 * &lt;p&gt;
+	 * if given entityParentIsPresent collect their child entityIds if individual
+	 * entityId is present set their children as emptyList and if the child
+	 * enittyIds present then pass those childIds to
+	 * getParentDataReverseOrder(method) to get the reverse value parent-child to
+	 * child-parent after the method is performed then add to the treeData again if
+	 * levelTwo has children iterate it again then add to treeData return the
+	 * treeData
+	 * &lt;/p&gt;
+	 * 
+	 * @param entityId
+	 * @param owner
+	 * @param owned
+	 * @param affilated
+	 * @param subsidary
+	 * @param commercialSuffix
+	 * @return
+	 */
+	private List&lt;ParentEntityNode&gt; entityParentIsPresent(String entityId, LosConfigDetails owner,
+			LosConfigDetails owned, LosConfigDetails affilated, LosConfigDetails subsidary, String commercialSuffix) {
+<span class="nc" id="L836">		List&lt;String&gt; childIds = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L837">		List&lt;String&gt; iterationChildIdS = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L838">		List&lt;String&gt; levelTwoChildIds = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L839">		List&lt;ParentEntityNode&gt; treeData = parentEntityNodeRepository.findEntityTreeData(entityId);</span>
+<span class="nc" id="L840">		treeData.stream().forEach(clids -&gt; {</span>
+<span class="nc bnc" id="L841" title="All 2 branches missed.">			if (clids.getChildId().endsWith(commercialSuffix)) {</span>
+<span class="nc" id="L842">				levelTwoChildIds.add(clids.getChildId());</span>
+			}
+<span class="nc" id="L844">		});</span>
+<span class="nc bnc" id="L845" title="All 2 branches missed.">		if (!levelTwoChildIds.isEmpty()) {</span>
+<span class="nc" id="L846">			List&lt;ParentEntityNode&gt; getParents = getParentDataReverseOrder(levelTwoChildIds);</span>
+<span class="nc" id="L847">			getParents.stream().forEach(findCtoCRel -&gt; {</span>
+<span class="nc bnc" id="L848" title="All 2 branches missed.">				if (findCtoCRel.getChildId().endsWith(commercialSuffix)</span>
+<span class="nc bnc" id="L849" title="All 2 branches missed.">						&amp;&amp; getConfigId(findCtoCRel).equals(LOSEntityConstants.OWNER)) {</span>
+<span class="nc" id="L850">					findCtoCRel.setLosConfigDetails(subsidary);</span>
+<span class="nc" id="L851">					findCtoCRel.setChildren(Arrays.asList());</span>
+<span class="nc" id="L852">					treeData.add(findCtoCRel);</span>
+				} else {
+<span class="nc" id="L854">					findCtoCRel.setChildren(Arrays.asList());</span>
+				}
+<span class="nc" id="L856">			});</span>
+		}
+<span class="nc" id="L858">		List&lt;ParentEntityNode&gt; parentData = getParentDataReverseOrder(Arrays.asList(entityId));</span>
+<span class="nc" id="L859">		parentData.stream()</span>
+<span class="nc" id="L860">				.forEach(parent -&gt; changingRelations(owner, owned, subsidary, commercialSuffix, childIds, parent));</span>
+<span class="nc bnc" id="L861" title="All 2 branches missed.">		if (entityId.endsWith(commercialSuffix)) {</span>
+<span class="nc" id="L862">			entityParentIsPresentSecondLeveIteration(entityId, owner, affilated, subsidary, commercialSuffix, childIds,</span>
+					iterationChildIdS, treeData);
+		}
+<span class="nc" id="L865">		treeData.addAll(parentData);</span>
+<span class="nc" id="L866">		return treeData;</span>
+	}
+
+	/**
+	 * This method is called by entityParentIsPresent(method), getting the levelOne
+	 * entityIds and and iterating to one more level and changing the relation
+	 * having Owned to Owner and adding that data to ParentEntityNode list.
+	 * 
+	 * @param entityId
+	 * @param owner
+	 * @param affilated
+	 * @param subsidary
+	 * @param commercialSuffix
+	 * @param childIds
+	 * @param iterationChildIdS
+	 * @param parentEntityNode
+	 */
+	private void entityParentIsPresentSecondLeveIteration(String entityId, LosConfigDetails owner,
+			LosConfigDetails affilated, LosConfigDetails subsidary, String commercialSuffix, List&lt;String&gt; childIds,
+			List&lt;String&gt; iterationChildIdS, List&lt;ParentEntityNode&gt; parentEntityNode) {
+<span class="nc" id="L886">		List&lt;ParentEntityNode&gt; secondIteration = parentEntityNodeRepository.findChildEntityData(childIds);</span>
+<span class="nc bnc" id="L887" title="All 2 branches missed.">		if (!secondIteration.isEmpty()) {</span>
+<span class="nc" id="L888">			secondIteration.stream().forEach(iteration -&gt; {</span>
+<span class="nc bnc" id="L889" title="All 4 branches missed.">				if (!iteration.getChildId().equals(entityId) &amp;&amp; iteration.getChildId().endsWith(commercialSuffix)</span>
+<span class="nc bnc" id="L890" title="All 2 branches missed.">						&amp;&amp; !iterationChildIdS.contains(iteration.getChildId())) {</span>
+<span class="nc" id="L891">					iterationChildIdS.add(iteration.getChildId());</span>
+<span class="nc" id="L892">					iteration.setParentId(entityId);</span>
+<span class="nc" id="L893">					iteration.setLosConfigDetails(affilated);</span>
+<span class="nc" id="L894">					List&lt;ParentEntityNode&gt; childOfChild = getParentDataReverseOrder(</span>
+<span class="nc" id="L895">							Arrays.asList(iteration.getChildId()));</span>
+<span class="nc bnc" id="L896" title="All 2 branches missed.">					if (!childOfChild.isEmpty()) {</span>
+<span class="nc" id="L897">						childOfChild.stream().forEach(setParentAsChild -&gt; {</span>
+<span class="nc bnc" id="L898" title="All 2 branches missed.">							if (setParentAsChild.getChildId().endsWith(LOSEntityConstants.INDIVIDUAL_SUFFIX_CODE)</span>
+<span class="nc bnc" id="L899" title="All 2 branches missed.">									&amp;&amp; getConfigId(setParentAsChild).equals(LOSEntityConstants.OWNED)) {</span>
+<span class="nc" id="L900">								setParentAsChild.setLosConfigDetails(owner);</span>
+<span class="nc" id="L901">								setParentAsChild.setChildren(Arrays.asList());</span>
+<span class="nc" id="L902">								parentEntityNode.add(setParentAsChild);</span>
+<span class="nc bnc" id="L903" title="All 2 branches missed.">							} else if (setParentAsChild.getChildId().endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="nc bnc" id="L904" title="All 2 branches missed.">									&amp;&amp; getConfigId(setParentAsChild).equals(LOSEntityConstants.OWNER)) {</span>
+<span class="nc" id="L905">								setParentAsChild.setLosConfigDetails(subsidary);</span>
+<span class="nc" id="L906">								setParentAsChild.setChildren(Arrays.asList());</span>
+<span class="nc" id="L907">								parentEntityNode.add(setParentAsChild);</span>
+							}
+<span class="nc" id="L909">						});</span>
+					}
+<span class="nc" id="L911">					parentEntityNode.add(iteration);</span>
+				}
+<span class="nc" id="L913">			});</span>
+		}
+<span class="nc bnc" id="L915" title="All 2 branches missed.">		if (entityId.endsWith(commercialSuffix)) {</span>
+<span class="nc" id="L916">			List&lt;ParentEntityNode&gt; getParent = getParentDataReverseOrder(childIds);</span>
+<span class="nc bnc" id="L917" title="All 2 branches missed.">			if (!getParent.isEmpty()) {</span>
+<span class="nc" id="L918">				getParent.stream().forEach(changeRelation -&gt; {</span>
+<span class="nc bnc" id="L919" title="All 2 branches missed.">					if (getConfigId(changeRelation).equals(LOSEntityConstants.OWNED)) {</span>
+<span class="nc" id="L920">						changeRelation.setLosConfigDetails(owner);</span>
+<span class="nc" id="L921">						changeRelation.setChildren(Arrays.asList());</span>
+<span class="nc" id="L922">						parentEntityNode.add(changeRelation);</span>
+<span class="nc bnc" id="L923" title="All 2 branches missed.">					} else if (changeRelation.getParentId().endsWith(LOSEntityConstants.INDIVIDUAL_SUFFIX_CODE)</span>
+<span class="nc bnc" id="L924" title="All 2 branches missed.">							&amp;&amp; getConfigId(changeRelation).equals(LOSEntityConstants.OWNER)) {</span>
+<span class="nc" id="L925">						changeRelation.setParentId(entityId);</span>
+<span class="nc" id="L926">						changeRelation.setLosConfigDetails(affilated);</span>
+<span class="nc" id="L927">						changeRelation.setChildren(Arrays.asList());</span>
+<span class="nc" id="L928">						parentEntityNode.add(changeRelation);</span>
+					}
+
+<span class="nc" id="L931">				});</span>
+			}
+		}
+<span class="nc" id="L934">	}</span>
+
+	/**
+	 * &lt;p&gt;
+	 * After getting the reversed entities the relationship between the entities
+	 * will change based on relation as follows: if entityId1 and entityId2 both are
+	 * commercial and having Owner Relation then it changes Owner to subsidary.
+	 * Other relation changes are if Owner - Owned ,Owned -Owner ,Owner - Subsidary,
+	 * 
+	 * &lt;/p&gt;
+	 * 
+	 * @param owner
+	 * @param owned
+	 * @param subsidary
+	 * @param commercialSuffix
+	 * @param childIds
+	 * @param parent
+	 */
+	private void changingRelations(LosConfigDetails owner, LosConfigDetails owned, LosConfigDetails subsidary,
+			String commercialSuffix, List&lt;String&gt; childIds, ParentEntityNode parent) {
+<span class="nc" id="L954">		parent.setChildren(Arrays.asList());</span>
+<span class="nc" id="L955">		childIds.add(parent.getChildId());</span>
+<span class="nc" id="L956">		Long relationId = getConfigId(parent);</span>
+<span class="nc bnc" id="L957" title="All 4 branches missed.">		if ((long) relationId == LOSEntityConstants.OWNER &amp;&amp; parent.getParentId().endsWith(commercialSuffix)</span>
+<span class="nc bnc" id="L958" title="All 2 branches missed.">				&amp;&amp; parent.getChildId().endsWith(commercialSuffix)) {</span>
+<span class="nc" id="L959">			parent.setLosConfigDetails(subsidary);</span>
+<span class="nc bnc" id="L960" title="All 2 branches missed.">		} else if ((long) relationId == LOSEntityConstants.OWNER) {</span>
+<span class="nc" id="L961">			parent.setLosConfigDetails(owned);</span>
+<span class="nc bnc" id="L962" title="All 2 branches missed.">		} else if ((long) relationId == LOSEntityConstants.OWNED) {</span>
+<span class="nc" id="L963">			parent.setLosConfigDetails(owner);</span>
+<span class="nc bnc" id="L964" title="All 2 branches missed.">		} else if ((long) relationId == LOSEntityConstants.SUBSIDIARY) {</span>
+<span class="nc" id="L965">			parent.setLosConfigDetails(owner);</span>
+		}
+<span class="nc" id="L967">	}</span>
+
+	/**
+	 * Method returns the RelationshipId from ParentEntityNode
+	 * 
+	 * @param getRelationId
+	 * @return
+	 */
+	private Long getConfigId(ParentEntityNode getRelationId) {
+<span class="nc" id="L976">		return getRelationId.getLosConfigDetails().getConfigId();</span>
+	}
+
+	/**
+	 * Method returns the RelationshipId from EntityRelationshipType
+	 * 
+	 * @param eachRelation
+	 * @return
+	 */
+	private Long getEntityRelationId(EntityRelationshipType eachRelation) {
+<span class="fc" id="L986">		return getRelationTypeId(eachRelation);</span>
+	}
+
+	/**
+	 * Method returns the list ParentEntityNode by replacing the EntityId1 and
+	 * EntityId2 to EntityId2 and EntityId1
+	 * 
+	 * @param entityIds
+	 * @return
+	 */
+	private List&lt;ParentEntityNode&gt; getParentDataReverseOrder(List&lt;String&gt; entityIds) {
+<span class="nc" id="L997">		return parentEntityNodeRepository.findParentEntityTreeData(entityIds);</span>
+	}
+
+	/**
+	 * Method used to Delete the Relationship by RelationId
+	 */
+	@Override
+	public void deleteEntityRelation(Long id) {
+<span class="fc" id="L1005">		EntityRelationshipType entRelationshipType = entityRelationshipTypeRepository.findById(id)</span>
+<span class="fc" id="L1006">				.orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Entity relationshiptype id not found: &quot; + id));</span>
+<span class="pc bpc" id="L1007" title="1 of 4 branches missed.">		if (entRelationshipType != null &amp;&amp; entRelationshipType.isDeleted() == Boolean.TRUE) {</span>
+<span class="fc" id="L1008">			LOG.info(ActivityLog.getActivityLog(null, Operation.DELETE, String.valueOf(id),</span>
+<span class="fc" id="L1009">					&quot;Invalid EntityRelation Id to Delete&quot;, Status.ERROR, null, ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L1010">			throw new ResourceNotFoundException(</span>
+<span class="fc" id="L1011">					errorMsgs.getMessage(INVALID_RELATIONTYPE_ID, new Object[] { id }, CommonUtils.getLocale()));</span>
+		}
+<span class="fc" id="L1013">		entityRelationshipTypeRepository.deleteEntityRelaton(id);</span>
+<span class="fc" id="L1014">	}</span>
+
+	@Override
+	public List&lt;EntityRelationshipType&gt; findEntityRelationsListByIds(List&lt;String&gt; entityIds) {
+<span class="fc" id="L1018">		List&lt;EntityRelationshipType&gt; relationList = entityRelationshipTypeRepository</span>
+<span class="fc" id="L1019">				.findAllRelatedEntityRelationData(entityIds);</span>
+<span class="fc" id="L1020">		List&lt;EntityRelationshipType&gt; removedPassedEntityIdList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1021">		relationList.stream().forEach(er -&gt; {</span>
+<span class="fc bfc" id="L1022" title="All 2 branches covered.">			if (!entityIds.contains(er.getEntityId2())) {</span>
+<span class="fc" id="L1023">				removedPassedEntityIdList.add(er);</span>
+			}
+<span class="fc" id="L1025">		});</span>
+<span class="fc" id="L1026">		return removedPassedEntityIdList;</span>
+	}
+
+	@Override
+	public EntityNodeSpouseDto findSpouse(String entityId) {
+		// get Entity d1 or Entity Id
+<span class="fc" id="L1032">		EntityNodeSpouseDto entityNodeSpouseDto = new EntityNodeSpouseDto();</span>
+<span class="fc" id="L1033">		Optional&lt;EntityRelationshipType&gt; entityRelationshipTypeOptional = entityRelationshipTypeRepository</span>
+<span class="fc" id="L1034">				.findByEntityId1IOrEntityId2(entityId, LOSEntityConstants.SPOUSE);</span>
+<span class="pc bpc" id="L1035" title="1 of 2 branches missed.">		if (entityRelationshipTypeOptional.isPresent()) {</span>
+<span class="nc" id="L1036">			EntityRelationshipType entityRelationshipType = entityRelationshipTypeOptional.get();</span>
+<span class="nc" id="L1037">			String spouseEntityId = getSpouseEntityId(entityRelationshipType, entityId);</span>
+<span class="nc" id="L1038">			Optional&lt;EntityNodeSpouse&gt; individualEntityOptional = individualEntityRepository.getSpouse(spouseEntityId);</span>
+<span class="nc bnc" id="L1039" title="All 2 branches missed.">			if (individualEntityOptional.isPresent()) {</span>
+<span class="nc" id="L1040">				EntityNodeSpouse individualEntity = individualEntityOptional.get();</span>
+<span class="nc" id="L1041">				entityNodeSpouseDto.setSpouseEntityID(individualEntity.getEntity_id());</span>
+<span class="nc" id="L1042">				entityNodeSpouseDto.setFirstName(individualEntity.getFirst_name());</span>
+<span class="nc" id="L1043">				entityNodeSpouseDto.setLastName(individualEntity.getLast_name());</span>
+			}
+		}
+<span class="fc" id="L1046">		return entityNodeSpouseDto;</span>
+	}
+
+	private String getSpouseEntityId(EntityRelationshipType relationshipType, String entityId) {
+<span class="nc bnc" id="L1050" title="All 2 branches missed.">		if (relationshipType.getEntityId2().equals(entityId)) {</span>
+<span class="nc" id="L1051">			return relationshipType.getEntityId1();</span>
+		}
+<span class="nc" id="L1053">		return relationshipType.getEntityId2();</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EntityController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.controller</a> &gt; <span class="el_source">EntityController.java</span></div><h1>EntityController.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.controller;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.jboss.logging.MDC;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.annotation.JsonView;
+import com.idexcel.cync.los.entity.common.constants.CoreConstants;
+import com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants;
+import com.idexcel.cync.los.entity.common.constants.LOSEntityConstants;
+import com.idexcel.cync.los.entity.common.utils.ActivityLog;
+import com.idexcel.cync.los.entity.common.utils.CommonUtils;
+import com.idexcel.cync.los.entity.common.utils.Operation;
+import com.idexcel.cync.los.entity.common.utils.Status;
+import com.idexcel.cync.los.entity.dto.CommercialEntityDto;
+import com.idexcel.cync.los.entity.dto.FinancialEntityDto;
+import com.idexcel.cync.los.entity.dto.FinancialEntityListDto;
+import com.idexcel.cync.los.entity.dto.IndividualEntityDto;
+import com.idexcel.cync.los.entity.dto.ResponseDto;
+import com.idexcel.cync.los.entity.exception.ResourceNotFoundException;
+import com.idexcel.cync.los.entity.mapper.FinancialEntityListMapper;
+import com.idexcel.cync.los.entity.mapper.FinancialEntityMapper;
+import com.idexcel.cync.los.entity.model.ClientEntity;
+import com.idexcel.cync.los.entity.model.CommercialEntity;
+import com.idexcel.cync.los.entity.model.CommercialEntityList;
+import com.idexcel.cync.los.entity.model.FinancialEntity;
+import com.idexcel.cync.los.entity.model.FinancialEntityList;
+import com.idexcel.cync.los.entity.model.IndividualFinancialEntity;
+import com.idexcel.cync.los.entity.model.IndividualFinancialEntityList;
+import com.idexcel.cync.los.entity.model.LosConfigDetails;
+import com.idexcel.cync.los.entity.service.DBQueriesService;
+import com.idexcel.cync.los.entity.service.FinancialService;
+import com.idexcel.cync.los.entity.validator.EntityDtoValidator;
+import com.idexcel.cync.los.entity.view.View;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+
+/**
+ * &lt;p&gt;
+ * The class {@code EntityController} represents as a entry point to access the
+ * APIs related to Individual Entity and Commercial Entity
+ * 
+ * @author Idexcel
+ */
+
+@RestController
+@CrossOrigin // NOSONAR
+@RequestMapping(value = CoreConstants.API_BASE_PATH + &quot;/entities&quot;)
+@Api(tags = { &quot;Entity Controller&quot; }, description = &quot;EntityController : used to Create, Read and Update Entity&quot;) // NOSONAR
+class EntityController {
+<span class="fc" id="L74">	private static final Logger LOG = LoggerFactory.getLogger(EntityController.class);</span>
+
+	private final FinancialService financialService;
+	private final FinancialEntityMapper financialEntityMapper;
+	private final EntityDtoValidator entityDtoValidator;
+<span class="fc" id="L79">	private final ResponseDto responseDto = new ResponseDto();</span>
+	private final DBQueriesService dbQueriesService;
+	private final MessageSource errorMsgs;
+	private final FinancialEntityListMapper financialEntityListMapper;
+
+	/**
+	 * Parameterized Constructor which initializes a newly created object
+	 * {@code EntityController} and a explicit copy of
+	 * {@code FinancialEntityMapper}, {@code FinancialService}, is created
+	 * 
+	 * @param financialEntityMapper {@code FinancialEntityMapper}
+	 * @param financialService      {@code FinancialService}
+	 */
+
+	@Autowired
+	public EntityController(FinancialService financialService, FinancialEntityMapper financialEntityMapper,
+			EntityDtoValidator entityDtoValidator, DBQueriesService dBQueriesService, MessageSource errorMsgs,
+<span class="fc" id="L96">			FinancialEntityListMapper financialEntityListMapper) {</span>
+<span class="fc" id="L97">		this.financialService = financialService;</span>
+<span class="fc" id="L98">		this.financialEntityMapper = financialEntityMapper;</span>
+<span class="fc" id="L99">		this.entityDtoValidator = entityDtoValidator;</span>
+<span class="fc" id="L100">		this.dbQueriesService = dBQueriesService;</span>
+<span class="fc" id="L101">		this.errorMsgs = errorMsgs;</span>
+<span class="fc" id="L102">		this.financialEntityListMapper = financialEntityListMapper;</span>
+<span class="fc" id="L103">	}</span>
+
+	/**
+	 * Method to get the Entity details for particular entityId
+	 * 
+	 * @param request  {@link HttpServletRequest}
+	 * @param response {@link HttpServletResponse}
+	 * @return {@code FinancialEntityDto}
+	 */
+	@ApiOperation(value = &quot;${ApiOperation.EntityController.getEntityById}&quot;)
+	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, value = &quot;/{entityId}&quot;)
+	@JsonView(View.AllFields.class)
+	public ResponseEntity&lt;FinancialEntityDto&gt; getEntityById(HttpServletRequest request, HttpServletResponse response,
+			@ApiParam(required = true, name = &quot;entityId&quot;, value = &quot;${ApiOperation.EntityController.getEntityById.entityId}&quot;) @PathVariable String entityId) {
+		FinancialEntityDto financialEntityDto;
+<span class="fc" id="L118">		FinancialEntity financialEntity = financialService.findById(entityId);</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">		if (financialEntity instanceof IndividualFinancialEntity) {</span>
+<span class="fc" id="L120">			financialEntityDto = financialEntityMapper</span>
+<span class="fc" id="L121">					.toIndividualEntityDto((IndividualFinancialEntity) financialEntity);</span>
+		} else {
+<span class="fc" id="L123">			financialEntityDto = financialEntityMapper.toCommercialEntityDto((CommercialEntity) financialEntity);</span>
+		}
+<span class="fc" id="L125">		LOG.info(ActivityLog.getActivityLog(null, Operation.GET, entityId, &quot;Get Entity ById&quot;, Status.SUCCESS,</span>
+<span class="fc" id="L126">				request.getHeader(LOSEntityConstants.TRANSACTION_ID), ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L127">		return new ResponseEntity&lt;&gt;(financialEntityDto, HttpStatus.OK);</span>
+	}
+
+	/**
+	 * API to Get ListOf Entity
+	 */
+	@ApiOperation(value = &quot;${ApiOperation.EntityController.getListOfEntity}&quot;, response = List.class)
+	@GetMapping
+	public ResponseEntity&lt;List&lt;FinancialEntityListDto&gt;&gt; getEntity(
+			@RequestParam(name = &quot;entityTypeId&quot;, required = false) Long entityTypeId, HttpServletRequest request,
+			HttpServletResponse response) {
+<span class="fc" id="L138">		LosConfigDetails losConfigdetails = new LosConfigDetails();</span>
+<span class="fc" id="L139">		losConfigdetails.setConfigId(entityTypeId);</span>
+<span class="fc" id="L140">		List&lt;FinancialEntityList&gt; financialEntityList = financialService.findAllEntity(losConfigdetails);</span>
+<span class="fc" id="L141">		List&lt;FinancialEntityListDto&gt; financialEntityListDto = financialEntityList.stream()</span>
+<span class="pc bnc" id="L142" title="All 2 branches missed.">				.map(entityObject -&gt; entityObject instanceof IndividualFinancialEntityList</span>
+						? financialEntityListMapper
+<span class="nc" id="L144">								.toIndividualEntityListDto((IndividualFinancialEntityList) entityObject)</span>
+<span class="nc" id="L145">						: financialEntityListMapper.toCommercialEntityListDto((CommercialEntityList) entityObject))</span>
+<span class="fc" id="L146">				.collect(Collectors.toList());</span>
+<span class="fc" id="L147">		LOG.info(ActivityLog.getActivityLog(null, Operation.GET, null, &quot;Get All Entity List&quot;, Status.SUCCESS,</span>
+<span class="fc" id="L148">				request.getHeader(LOSEntityConstants.TRANSACTION_ID), ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L149">		return new ResponseEntity&lt;&gt;(financialEntityListDto, HttpStatus.OK);</span>
+	}
+
+	/**
+	 * API For Creating Individual Entity
+	 * 
+	 * @param individualFinancialEntityDto
+	 * @param individualEntityTypeId
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@ApiOperation(value = &quot;${ApiOperation.EntityController.createIndividualEntity}&quot;, response = IndividualEntityDto.class)
+	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, value = &quot;/individual/{individualEntityTypeId}&quot;)
+	public ResponseEntity&lt;ResponseDto&gt; createIndividualEntity(
+			@ApiParam(value = &quot;${ApiOperation.EntityController.createIndividualEntity.individualFinancialEntityDto}&quot;) @Validated @RequestBody IndividualEntityDto individualFinancialEntityDto,
+			@ApiParam(required = true, name = &quot;individualEntityTypeId&quot;, value = &quot;${ApiOperation.EntityController.createIndividualEntity.entityTypeId}&quot;) @PathVariable Long individualEntityTypeId,
+			HttpServletRequest request, HttpServletResponse response) {
+<span class="fc" id="L167">		LOG.debug(&quot;create Individual Entity&quot;);</span>
+<span class="fc" id="L168">		MDC.put(LOSEntityConstants.CLIENT_CODE_KEY, findClientCode());</span>
+<span class="fc" id="L169">		MDC.put(LOSEntityConstants.ENTITY_TYPE_KEY, LOSEntityConstants.INDIVIDUAL_SUFFIX_CODE);</span>
+<span class="fc" id="L170">		entityDtoValidator.isvalidDate(individualFinancialEntityDto);</span>
+<span class="fc" id="L171">		String individualEntityId = financialService.saveEntity(</span>
+<span class="fc" id="L172">				financialEntityMapper.toIndividualFinancialEntity(individualFinancialEntityDto),</span>
+				individualEntityTypeId);
+<span class="fc" id="L174">		LOG.debug(&quot;IndividualEntity Created Successfuly with individualEntityId {} / {}&quot;, request.getRequestURL(),</span>
+				individualEntityId);
+<span class="fc" id="L176">		responseDto.setMessage(&quot;Individual Entity Created Successfully.&quot;);</span>
+<span class="fc" id="L177">		responseDto.setId(individualEntityId);</span>
+<span class="fc" id="L178">		LOG.info(ActivityLog.getActivityLog(ActivityLog.entityName(individualFinancialEntityDto), Operation.INSERT,</span>
+				individualEntityId, &quot;Created IndividualEntity&quot;, Status.SUCCESS,
+<span class="fc" id="L180">				response.getHeader(LOSEntityConstants.TRANSACTION_ID), ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L181">		return new ResponseEntity&lt;&gt;(responseDto, HttpStatus.CREATED);</span>
+	}
+
+	/**
+	 * API to Create Commercial Entity
+	 * 
+	 * @param commercialEntityDto
+	 * @param commercialEntityTypeId
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@ApiOperation(value = &quot;${ApiOperation.EntityController.createCommercialEntity}&quot;, response = CommercialEntityDto.class)
+	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, value = &quot;/commercial/{commercialEntityTypeId}&quot;)
+	public ResponseEntity&lt;ResponseDto&gt; createCommercialEntity(
+			@ApiParam(value = &quot;${ApiOperation.EntityController.createCommercialEntity.commercialEntityDto}&quot;) @Validated @RequestBody CommercialEntityDto commercialEntityDto,
+			@ApiParam(required = true, name = &quot;commercialEntityTypeId&quot;, value = &quot;${ApiOperation.EntityController.createCommercialEntity.entityTypeId}&quot;) @PathVariable Long commercialEntityTypeId,
+			HttpServletRequest request, HttpServletResponse response) {
+<span class="fc" id="L199">		response.addHeader(&quot;Location&quot;, &quot;Test&quot;);</span>
+<span class="fc" id="L200">		LOG.debug(&quot;create Business Entity&quot;);</span>
+<span class="fc" id="L201">		MDC.put(LOSEntityConstants.CLIENT_CODE_KEY, findClientCode());</span>
+<span class="fc" id="L202">		MDC.put(LOSEntityConstants.ENTITY_TYPE_KEY, LOSEntityConstants.COMMERCIAL_SUFFIX_CODE);</span>
+<span class="fc" id="L203">		entityDtoValidator.isvalidDate(commercialEntityDto);</span>
+<span class="fc" id="L204">		entityDtoValidator.isvalidBusinessName(commercialEntityDto);</span>
+<span class="fc" id="L205">		String commercialEntityId = financialService</span>
+<span class="fc" id="L206">				.saveEntity(financialEntityMapper.toCommercialEntity(commercialEntityDto), commercialEntityTypeId);</span>
+<span class="fc" id="L207">		LOG.debug(&quot;CommercialEntity Created Successfuly with commercialEntityId {} / {}&quot;, request.getRequestURL(),</span>
+				commercialEntityId);
+<span class="fc" id="L209">		responseDto.setMessage(&quot;Commercial Entity Created Successfully.&quot;);</span>
+<span class="fc" id="L210">		responseDto.setId(commercialEntityId);</span>
+<span class="fc" id="L211">		LOG.info(ActivityLog.getActivityLog(commercialEntityDto.getBusinessName(), Operation.INSERT, commercialEntityId,</span>
+<span class="fc" id="L212">				&quot;Created CommercialEntity&quot;, Status.SUCCESS, response.getHeader(LOSEntityConstants.TRANSACTION_ID),</span>
+<span class="fc" id="L213">				ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L214">		return new ResponseEntity&lt;&gt;(responseDto, HttpStatus.CREATED);</span>
+	}
+
+	/**
+	 * API to Update Individual Entity
+	 * 
+	 * @param individualEntityDto
+	 * @param individualEntityTypeId
+	 * @param entityId
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@ApiOperation(value = &quot;${ApiOperation.EntityController.updateIndividualEntity}&quot;, response = IndividualEntityDto.class)
+	@PutMapping(produces = MediaType.APPLICATION_JSON_VALUE, value = &quot;/individual/{individualEntityTypeId}/{entityId}&quot;)
+	public ResponseEntity&lt;ResponseDto&gt; updateIndividualEntity(
+			@ApiParam(value = &quot;${ApiOperation.EntityController.updateIndividualEntity.individualFinancialEntityDto}&quot;) @Validated @RequestBody IndividualEntityDto individualEntityDto,
+			@ApiParam(required = true, name = &quot;individualEntityTypeId&quot;, value = &quot;${ApiOperation.EntityController.updateIndividualEntity.entityTypeId}&quot;) @PathVariable Long individualEntityTypeId,
+			@ApiParam(required = true, name = &quot;entityId&quot;, value = &quot;${ApiOperation.EntityController.updateIndividualEntity.entityId}&quot;) @PathVariable String entityId,
+			HttpServletRequest request, HttpServletResponse response) {
+<span class="fc" id="L234">		LOG.debug(&quot;update Individual Entity&quot;);</span>
+<span class="fc" id="L235">		entityDtoValidator.isvalidDate(individualEntityDto);</span>
+<span class="fc" id="L236">		String individualEntityId = financialService.updateEntity(individualEntityTypeId, entityId,</span>
+<span class="fc" id="L237">				financialEntityMapper.toIndividualFinancialEntity(individualEntityDto));</span>
+<span class="fc" id="L238">		LOG.debug(&quot;IndividualEntity Updated Successfuly with individualEntityId {} / {}&quot;, request.getRequestURL(),</span>
+				individualEntityId);
+<span class="fc" id="L240">		responseDto.setMessage(&quot;Individual Entity Updated Successfully.&quot;);</span>
+<span class="fc" id="L241">		responseDto.setId(individualEntityId);</span>
+<span class="fc" id="L242">		LOG.info(ActivityLog.getActivityLog(ActivityLog.entityName(individualEntityDto), Operation.UPDATE,</span>
+				individualEntityId, &quot;Updated IndividualEntity&quot;, Status.SUCCESS,
+<span class="fc" id="L244">				request.getHeader(LOSEntityConstants.TRANSACTION_ID), ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L245">		return new ResponseEntity&lt;&gt;(responseDto, HttpStatus.OK);</span>
+	}
+
+	/**
+	 * API to Update Commercial Entity
+	 * 
+	 * @param commercialEntityDto
+	 * @param commercialEntityTypeId
+	 * @param entityId
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@ApiOperation(value = &quot;${ApiOperation.EntityController.updateCommercialEntity}&quot;, response = CommercialEntityDto.class)
+	@PutMapping(produces = MediaType.APPLICATION_JSON_VALUE, value = &quot;/commercial/{commercialEntityTypeId}/{entityId}&quot;)
+	public ResponseEntity&lt;ResponseDto&gt; updateCommercialEntity(
+			@ApiParam(value = &quot;${ApiOperation.EntityController.updateCommercialEntity.commercialEntityDto}&quot;) @Validated @RequestBody CommercialEntityDto commercialEntityDto,
+			@ApiParam(required = true, name = &quot;commercialEntityTypeId&quot;, value = &quot;${ApiOperation.EntityController.updateCommercialEntity.entityTypeId}&quot;) @PathVariable Long commercialEntityTypeId,
+			@ApiParam(required = true, name = &quot;entityId&quot;, value = &quot;${ApiOperation.EntityController.updateCommercialEntity.entityId}&quot;) @PathVariable String entityId,
+			HttpServletRequest request, HttpServletResponse response) {
+<span class="fc" id="L265">		LOG.debug(&quot;update Commercial Entity&quot;);</span>
+<span class="fc" id="L266">		entityDtoValidator.isvalidDate(commercialEntityDto);</span>
+<span class="fc" id="L267">		entityDtoValidator.isvalidBusinessName(commercialEntityDto);</span>
+<span class="fc" id="L268">		String commercialEntityId = financialService.updateEntity(commercialEntityTypeId, entityId,</span>
+<span class="fc" id="L269">				financialEntityMapper.toCommercialEntity(commercialEntityDto));</span>
+<span class="fc" id="L270">		LOG.debug(&quot;Commercial Entity Updated Successfuly {} / {}&quot;, request.getRequestURL(), commercialEntityId);</span>
+<span class="fc" id="L271">		responseDto.setMessage(&quot;Commercial Entity Updated Successfully.&quot;);</span>
+<span class="fc" id="L272">		responseDto.setId(commercialEntityId);</span>
+<span class="fc" id="L273">		LOG.info(ActivityLog.getActivityLog(commercialEntityDto.getBusinessName(), Operation.UPDATE, commercialEntityId,</span>
+<span class="fc" id="L274">				&quot;Updated CommercialEntity&quot;, Status.SUCCESS, request.getHeader(LOSEntityConstants.TRANSACTION_ID),</span>
+<span class="fc" id="L275">				ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L276">		return new ResponseEntity&lt;&gt;(responseDto, HttpStatus.OK);</span>
+	}
+
+	/**
+	 * API For Searching searchDuplicateEntityName
+	 * 
+	 * @param entityTypeId
+	 * @param businessName
+	 * @param firstName
+	 * @param middleName
+	 * @param lastName
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@ApiOperation(value = &quot;${ApiOperation.EntityController.searchDuplicateEntityName}&quot;)
+	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, value = &quot;/searchDuplicateEntityName&quot;)
+	@JsonView(View.AllFields.class)
+	public ResponseEntity&lt;List&lt;FinancialEntityDto&gt;&gt; searchDuplicateEntityName(
+			@ApiParam(required = true, name = &quot;entityTypeId&quot;) @RequestParam(required = true) Long entityTypeId,
+			@ApiParam(required = false, name = &quot;businessName&quot;) @RequestParam(required = false) String businessName,
+			@ApiParam(required = false, name = &quot;firstName&quot;) @RequestParam(required = false) String firstName,
+			@ApiParam(required = false, name = &quot;middleName&quot;) @RequestParam(required = false) String middleName,
+			@ApiParam(required = false, name = &quot;lastName&quot;) @RequestParam(required = false) String lastName,
+			HttpServletRequest request, HttpServletResponse response) {
+<span class="fc" id="L301">		LOG.debug(&quot;Search Entity by Name&quot;);</span>
+<span class="fc" id="L302">		List&lt;FinancialEntity&gt; entityList = financialService.searchDuplicateEntityName(entityTypeId, businessName,</span>
+				firstName, middleName, lastName);
+<span class="fc" id="L304">		List&lt;FinancialEntityDto&gt; financialEntityDtoList = entityList.stream()</span>
+<span class="fc bfc" id="L305" title="All 2 branches covered.">				.map(entityObject -&gt; entityObject instanceof IndividualFinancialEntity</span>
+<span class="fc" id="L306">						? financialEntityMapper.toIndividualEntityDto((IndividualFinancialEntity) entityObject)</span>
+<span class="fc" id="L307">						: financialEntityMapper.toCommercialEntityDto((CommercialEntity) entityObject))</span>
+<span class="fc" id="L308">				.collect(Collectors.toList());</span>
+<span class="fc" id="L309">		LOG.info(ActivityLog.getActivityLog(null, Operation.GET, null, &quot;searchDuplicateEntityName&quot;, Status.SUCCESS,</span>
+<span class="fc" id="L310">				request.getHeader(LOSEntityConstants.TRANSACTION_ID), ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L311">		return new ResponseEntity&lt;&gt;(financialEntityDtoList, HttpStatus.OK);</span>
+	}
+
+	/**
+	 * API For Searching EntityByName
+	 * 
+	 * @param entityName
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@ApiOperation(value = &quot;${ApiOperation.EntityController.searchEntityByName}&quot;)
+	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE, value = &quot;/nameSearch&quot;)
+	@JsonView(View.AllFields.class)
+	public ResponseEntity&lt;List&lt;FinancialEntityDto&gt;&gt; searchEntityByName(
+			@ApiParam(required = true, name = &quot;entityName&quot;, value = &quot;${ApiOperation.EntityController.createEntityRelation.entityName}&quot;) @RequestParam String entityName,
+			HttpServletRequest request, HttpServletResponse response) {
+<span class="fc" id="L328">		LOG.debug(&quot;Search Entity by Name&quot;);</span>
+<span class="fc" id="L329">		List&lt;FinancialEntity&gt; entityList = financialService.searchEntityByName(entityName);</span>
+<span class="fc" id="L330">		List&lt;FinancialEntityDto&gt; financialEntityDtoList = entityList.stream()</span>
+<span class="fc bfc" id="L331" title="All 2 branches covered.">				.map(entityObject -&gt; entityObject instanceof IndividualFinancialEntity</span>
+<span class="fc" id="L332">						? financialEntityMapper.toIndividualEntityDto((IndividualFinancialEntity) entityObject)</span>
+<span class="fc" id="L333">						: financialEntityMapper.toCommercialEntityDto((CommercialEntity) entityObject))</span>
+<span class="fc" id="L334">				.collect(Collectors.toList());</span>
+<span class="fc" id="L335">		LOG.info(ActivityLog.getActivityLog(entityName, Operation.GET, null, &quot;Search EntityByName&quot;, Status.SUCCESS,</span>
+<span class="fc" id="L336">				response.getHeader(LOSEntityConstants.TRANSACTION_ID), ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L337">		return new ResponseEntity&lt;&gt;(financialEntityDtoList, HttpStatus.OK);</span>
+	}
+
+	String findClientCode() {
+<span class="fc" id="L341">		String lenderName = (String) MDC.get(LOSEntityConstants.CLIENT_NAME_KEY);</span>
+<span class="fc" id="L342">		ClientEntity clientInfo = dbQueriesService.fetchClientByName(lenderName);</span>
+<span class="fc bfc" id="L343" title="All 2 branches covered.">		if (clientInfo == null) {</span>
+<span class="fc" id="L344">			throw new ResourceNotFoundException(errorMsgs.getMessage(ErrorMessageConstants.LENDER_INFO,</span>
+<span class="fc" id="L345">					new Object[] { lenderName }, CommonUtils.getLocale()));</span>
+		}
+<span class="fc" id="L347">		return clientInfo.getClientCode();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MultiTenancyJpaConfiguration.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.multitenant</a> &gt; <span class="el_source">MultiTenancyJpaConfiguration.java</span></div><h1>MultiTenancyJpaConfiguration.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.multitenant;
+
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import javax.persistence.EntityManagerFactory;
+import javax.sql.DataSource;
+
+import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import com.idexcel.cync.los.entity.common.constants.CoreConstants;
+import com.idexcel.cync.los.entity.multitenant.MultitenancyProperties.LosDataSourceProperties;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+@Configuration
+@EnableConfigurationProperties({ MultitenancyProperties.class, JpaProperties.class })
+@EnableTransactionManagement
+public class MultiTenancyJpaConfiguration {
+
+<span class="nc" id="L37">	private static final Logger LOG = LoggerFactory.getLogger(MultiTenancyJpaConfiguration.class);</span>
+
+	private final JpaProperties jpaProperties;
+
+	@Autowired
+<span class="nc" id="L42">	public MultiTenancyJpaConfiguration(JpaProperties jpaProperties) {</span>
+<span class="nc" id="L43">		this.jpaProperties = jpaProperties;</span>
+<span class="nc" id="L44">	}</span>
+
+	@Primary
+	@Bean(name = &quot;dataSourcesMtApp&quot;)
+	public Map&lt;String, DataSource&gt; dataSourcesMtApp() {
+<span class="nc" id="L49">		return new HashMap&lt;&gt;();</span>
+	}
+
+	@Bean
+	public MultiTenantConnectionProvider multiTenantConnectionProvider() {
+		// Autowires dataSourcesMtApp
+<span class="nc" id="L55">		return new MultitenantConnectionProvider();</span>
+	}
+
+	@Bean
+	public CurrentTenantIdentifierResolver currentTenantIdentifierResolver() {
+<span class="nc" id="L60">		return new CurrentTenantIdentifierResolverImpl();</span>
+	}
+
+	@Primary
+	@Bean(name = &quot;tenantEntityManager&quot;)
+	public LocalContainerEntityManagerFactoryBean entityManagerFactoryBean(
+			MultiTenantConnectionProvider multiTenantConnectionProvider,
+			CurrentTenantIdentifierResolver currentTenantIdentifierResolver) {
+<span class="nc" id="L68">		Map&lt;String, Object&gt; hibernateProps = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L69">		hibernateProps.putAll(this.jpaProperties.getProperties());</span>
+<span class="nc" id="L70">		hibernateProps.put(org.hibernate.cfg.Environment.MULTI_TENANT, MultiTenancyStrategy.DATABASE);</span>
+<span class="nc" id="L71">		hibernateProps.put(org.hibernate.cfg.Environment.MULTI_TENANT_CONNECTION_PROVIDER,</span>
+				multiTenantConnectionProvider);
+<span class="nc" id="L73">		hibernateProps.put(org.hibernate.cfg.Environment.MULTI_TENANT_IDENTIFIER_RESOLVER,</span>
+				currentTenantIdentifierResolver);
+<span class="nc" id="L75">		hibernateProps.put(org.hibernate.cfg.Environment.DIALECT, &quot;org.hibernate.dialect.PostgreSQLDialect&quot;);</span>
+<span class="nc" id="L76">		hibernateProps.put(org.hibernate.cfg.Environment.SHOW_SQL, false);</span>
+<span class="nc" id="L77">		LocalContainerEntityManagerFactoryBean result = new LocalContainerEntityManagerFactoryBean();</span>
+<span class="nc" id="L78">		result.setPackagesToScan(CoreConstants.LOAS_ENTITY_BASE_PACKAGE);</span>
+<span class="nc" id="L79">		result.setJpaVendorAdapter(new HibernateJpaVendorAdapter());</span>
+<span class="nc" id="L80">		result.setJpaPropertyMap(hibernateProps);</span>
+<span class="nc" id="L81">		LOG.debug(&quot;in entityManagerFactoryBean &quot;);</span>
+<span class="nc" id="L82">		return result;</span>
+	}
+
+	@Bean
+	public EntityManagerFactory entityManagerFactory(LocalContainerEntityManagerFactoryBean entityManagerFactoryBean) {
+<span class="nc" id="L87">		return entityManagerFactoryBean.getObject();</span>
+	}
+
+	@Bean
+	public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
+<span class="nc" id="L92">		return new JpaTransactionManager(entityManagerFactory);</span>
+	}
+
+	/**
+	 * 
+	 * @param dsProperties
+	 * @param poolName
+	 * @return
+	 */
+	@SuppressWarnings(&quot;unused&quot;)
+	private HikariDataSource getHikariDatasource(LosDataSourceProperties dsProperties, int poolSize, String poolName) {
+<span class="nc" id="L103">		HikariConfig hikariConfig = new HikariConfig();</span>
+<span class="nc" id="L104">		hikariConfig.setJdbcUrl(dsProperties.getUrl());</span>
+<span class="nc" id="L105">		hikariConfig.setUsername(dsProperties.getUsername());</span>
+<span class="nc" id="L106">		hikariConfig.setPassword(dsProperties.getPassword());</span>
+<span class="nc" id="L107">		hikariConfig.setMaximumPoolSize(poolSize);</span>
+<span class="nc" id="L108">		hikariConfig.setPoolName(dsProperties.getLender() + &quot;_&quot; + poolName);</span>
+<span class="nc" id="L109">		hikariConfig.addDataSourceProperty(&quot;dataSource.cachePrepStmts&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L110">		hikariConfig.addDataSourceProperty(&quot;dataSource.prepStmtCacheSize&quot;, &quot;250&quot;);</span>
+<span class="nc" id="L111">		hikariConfig.addDataSourceProperty(&quot;dataSource.prepStmtCacheSqlLimit&quot;, &quot;2048&quot;);</span>
+<span class="nc" id="L112">		hikariConfig.addDataSourceProperty(&quot;dataSource.useServerPrepStmts&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L113">		hikariConfig.addDataSourceProperty(&quot;dataSource.cacheResultSetMetadata&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L114">		return new HikariDataSource(hikariConfig);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

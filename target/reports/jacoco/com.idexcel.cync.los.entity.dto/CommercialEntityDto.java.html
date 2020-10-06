@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CommercialEntityDto.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.dto</a> &gt; <span class="el_source">CommercialEntityDto.java</span></div><h1>CommercialEntityDto.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.dto;
+
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.idexcel.cync.los.entity.common.constants.LOSEntityConstants;
+import com.idexcel.cync.los.entity.view.View;
+
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Getter;
+import lombok.Setter;
+
+<span class="fc" id="L15">@Setter</span>
+@Getter
+<span class="fc" id="L17">public class CommercialEntityDto extends FinancialEntityDto {</span>
+
+	@NotEmpty(message = &quot;error.businessName.value&quot;)
+	@JsonView({ View.AllFields.class, View.CommercialEntityView.class, View.EntityNameSearchView.class,
+			View.EntityTreeDataView.class})
+<span class="fc" id="L22">	private String businessName;</span>
+
+	@ApiModelProperty(notes = &quot;Business open date&quot;, example = &quot;06/30/1995&quot;)
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = LOSEntityConstants.DATE_FORMAT)
+	@Pattern(regexp = LOSEntityConstants.DATE_PATTERN, message = &quot;error.Date.format&quot;)
+	@JsonView({ View.AllFields.class, View.CommercialEntityView.class })
+<span class="fc" id="L28">	private String businessOpenDate;</span>
+
+	@JsonView({ View.AllFields.class, View.CommercialEntityView.class })
+<span class="nc" id="L31">	private NaicsDto naics;</span>
+
+	@JsonView({ View.AllFields.class, View.CommercialEntityView.class, View.EntityTreeDataView.class,})
+<span class="nc" id="L34">	private LosBusinessTypeDto businessType;</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

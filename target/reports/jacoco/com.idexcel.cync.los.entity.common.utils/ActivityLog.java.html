@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ActivityLog.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.common.utils</a> &gt; <span class="el_source">ActivityLog.java</span></div><h1>ActivityLog.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.common.utils;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
+import com.google.gson.Gson;
+import com.idexcel.cync.los.entity.common.constants.CoreConstants;
+import com.idexcel.cync.los.entity.common.constants.LOSEntityConstants;
+import com.idexcel.cync.los.entity.dto.IndividualEntityDto;
+
+<span class="nc" id="L17">public class ActivityLog {</span>
+
+<span class="fc" id="L19">	private static final Logger LOG = LoggerFactory.getLogger(ActivityLog.class);</span>
+
+	public static String getActivityLog(String entityName, Operation operation, String entityId, String userAction,
+			Status status, String requestIdentifier, LocalDateTime timestamp) {
+<span class="fc" id="L23">		Map&lt;String, String&gt; json = new LinkedHashMap&lt;String, String&gt;();</span>
+<span class="fc" id="L24">		json.put(LOSEntityConstants.APP_NAME, LOSEntityConstants.CYNC_LOS);</span>
+<span class="fc" id="L25">		json.put(LOSEntityConstants.CLIENT, MDC.get(LOSEntityConstants.CLIENT_NAME_KEY));</span>
+<span class="fc" id="L26">		json.put(LOSEntityConstants.SERVICE_NAME, LOSEntityConstants.APPLICATION_NAME);</span>
+<span class="fc" id="L27">		json.put(LOSEntityConstants.RECORD_NAME, entityName);</span>
+<span class="fc" id="L28">		json.put(LOSEntityConstants.OPERATION, operation.toString());</span>
+<span class="fc" id="L29">		json.put(LOSEntityConstants.ID, entityId);</span>
+<span class="fc" id="L30">		json.put(LOSEntityConstants.USER_ACTION, userAction);</span>
+<span class="fc" id="L31">		json.put(LOSEntityConstants.STATUS, status.toString());</span>
+<span class="fc" id="L32">		json.put(LOSEntityConstants.REQUESTIDENTIFIER, requestIdentifier);</span>
+<span class="fc" id="L33">		json.put(LOSEntityConstants.USER_EMAIL, MDC.get(CoreConstants.USER_NAME));</span>
+<span class="fc" id="L34">		json.put(LOSEntityConstants.TIMESTAMP, timestamp.toString());</span>
+<span class="fc" id="L35">		String jsonData = null;</span>
+		try {
+<span class="fc" id="L37">			jsonData = new Gson().toJson(json, Object.class);</span>
+<span class="nc" id="L38">		} catch (Exception e) {</span>
+<span class="nc" id="L39">			LOG.info(&quot;Error while printing the activity log {}&quot; + e.getMessage());</span>
+<span class="fc" id="L40">		}</span>
+<span class="fc" id="L41">		return jsonData;</span>
+	}
+
+	/**
+	 * Method to convert local time into UTC
+	 * 
+	 * @return
+	 */
+	public static LocalDateTime localDateTimeInUTC() {
+<span class="fc" id="L50">		return LocalDateTime.now().atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneId.of(&quot;UTC&quot;))</span>
+<span class="fc" id="L51">				.toLocalDateTime();</span>
+	}
+
+	/**
+	 * Method to return IndividualEntity Name
+	 * 
+	 * @param individualFinancialEntityDto
+	 * @return
+	 */
+	public static String entityName(IndividualEntityDto individualFinancialEntityDto) {
+<span class="fc" id="L61">		String nameString = null;</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">		if (individualFinancialEntityDto.getMiddleName() == null) {</span>
+<span class="nc" id="L63">			nameString = individualFinancialEntityDto.getFirstName() + &quot; &quot; + individualFinancialEntityDto.getLastName();</span>
+		} else {
+<span class="fc" id="L65">			nameString = individualFinancialEntityDto.getFirstName() + &quot; &quot;</span>
+<span class="fc" id="L66">					+ individualFinancialEntityDto.getMiddleName() + &quot; &quot; + individualFinancialEntityDto.getLastName();</span>
+		}
+<span class="fc" id="L68">		return nameString;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

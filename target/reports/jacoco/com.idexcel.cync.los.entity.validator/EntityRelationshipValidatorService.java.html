@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EntityRelationshipValidatorService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.validator</a> &gt; <span class="el_source">EntityRelationshipValidatorService.java</span></div><h1>EntityRelationshipValidatorService.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.validator;
+
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.ENTITY_ID_FOUND_SAME;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.ENTITY_ID_NOT_FOUND;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.ENTITY_RELATIONS_OWNERSHIP;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.ENTITY_RELATIONS_OWNERSHIP_PERCENT;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.ENTITY_RELATION_EXIST;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.ENTITY_RELATION_NOT_ALLOWED;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.ENTITY_RELATION_STATUS_FALSE_EXIST;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.INVALID_RELATION_CONFIG_DETAILS;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.INVALID_RELATION_IDS;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.INVALID_RELATION_OWNERSHIP;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.INVALID_RELATION_TYPE_ID;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.MULTIPLE_SPOUSE;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Service;
+
+import com.idexcel.cync.los.entity.common.constants.LOSEntityConstants;
+import com.idexcel.cync.los.entity.common.utils.CommonUtils;
+import com.idexcel.cync.los.entity.dao.ChildEntityNodeRepository;
+import com.idexcel.cync.los.entity.dao.ConfigLookupRepository;
+import com.idexcel.cync.los.entity.dao.EntityRelationshipTypeRepository;
+import com.idexcel.cync.los.entity.dao.FinancialRepository;
+import com.idexcel.cync.los.entity.exception.BadRequestException;
+import com.idexcel.cync.los.entity.model.ChildEntityNode;
+import com.idexcel.cync.los.entity.model.EntityRelationshipType;
+import com.idexcel.cync.los.entity.model.FinancialEntity;
+import com.idexcel.cync.los.entity.model.LosConfigDetails;
+import com.idexcel.cync.los.entity.service.impl.EntityRelationshipTreeServiceImpl;
+
+@Service
+public class EntityRelationshipValidatorService {
+
+<span class="fc" id="L41">	private static final Logger LOG = LoggerFactory.getLogger(EntityRelationshipValidatorService.class);</span>
+
+	private final FinancialRepository financialRepository;
+	private final ConfigLookupRepository configLookupRepository;
+	private final EntityRelationshipTypeRepository entityRelationshipTypeRepository;
+	private final ChildEntityNodeRepository childEntityNodeRepository;
+	private final MessageSource errorMsgs;
+	private final EntityRelationshipTreeServiceImpl entityRelationshipTreeServiceImpl;
+
+	@Autowired
+	public EntityRelationshipValidatorService(FinancialRepository financialRepository,
+			EntityRelationshipTypeRepository entityRelationshipTypeRepository,
+			ChildEntityNodeRepository childEntityNodeRepository, ConfigLookupRepository configLookupRepository,
+<span class="fc" id="L54">			EntityRelationshipTreeServiceImpl entityRelationshipTreeServiceImpl, MessageSource errorMsgs) {</span>
+<span class="fc" id="L55">		this.financialRepository = financialRepository;</span>
+<span class="fc" id="L56">		this.configLookupRepository = configLookupRepository;</span>
+<span class="fc" id="L57">		this.entityRelationshipTypeRepository = entityRelationshipTypeRepository;</span>
+<span class="fc" id="L58">		this.childEntityNodeRepository = childEntityNodeRepository;</span>
+<span class="fc" id="L59">		this.errorMsgs = errorMsgs;</span>
+<span class="fc" id="L60">		this.entityRelationshipTreeServiceImpl = entityRelationshipTreeServiceImpl;</span>
+<span class="fc" id="L61">	}</span>
+
+	/**
+	 * Method to ValidEntityRelation
+	 * 
+	 * @param entityRelationshipType
+	 * @param entityId1
+	 */
+	public void isValidEntityRelation(EntityRelationshipType entityRelationshipType, String entityId1) {
+<span class="fc" id="L70">		FinancialEntity parentEntityId = financialRepository.findById(entityId1)</span>
+<span class="fc" id="L71">				.orElseThrow(() -&gt; new BadRequestException(errorMsgs.getMessage(ENTITY_ID_NOT_FOUND,</span>
+<span class="fc" id="L72">						new Object[] { entityId1 }, CommonUtils.getLocale())));</span>
+<span class="fc" id="L73">		FinancialEntity childEntityId = financialRepository.findById(entityRelationshipType.getEntityId2())</span>
+<span class="pc" id="L74">				.orElseThrow(() -&gt; new BadRequestException(errorMsgs.getMessage(ENTITY_ID_NOT_FOUND,</span>
+<span class="nc" id="L75">						new Object[] { entityRelationshipType.getEntityId2() }, CommonUtils.getLocale())));</span>
+		// condition to validate parentId childId cannot be same
+<span class="fc bfc" id="L77" title="All 2 branches covered.">		if (parentEntityId.getEntityId().equals(childEntityId.getEntityId())) {</span>
+<span class="fc" id="L78">			throw new BadRequestException(errorMsgs.getMessage(INVALID_RELATION_IDS,</span>
+<span class="fc" id="L79">					new Object[] { entityRelationshipType.getEntityId2(), entityId1 }, CommonUtils.getLocale()));</span>
+		}
+		// condition to validate EntityRelationConfigDetail
+<span class="fc bfc" id="L82" title="All 2 branches covered.">		if (entityRelationshipType.getEntityRelationConfigDetail() == null) {</span>
+<span class="fc" id="L83">			throw new BadRequestException(</span>
+<span class="fc" id="L84">					errorMsgs.getMessage(INVALID_RELATION_CONFIG_DETAILS, null, CommonUtils.getLocale()));</span>
+		} else {
+<span class="pc bpc" id="L86" title="1 of 4 branches missed.">			if (getRelationId(entityRelationshipType) == null || getRelationId(entityRelationshipType) == 0) {</span>
+<span class="fc" id="L87">				throw new BadRequestException(</span>
+<span class="fc" id="L88">						errorMsgs.getMessage(INVALID_RELATION_CONFIG_DETAILS, null, CommonUtils.getLocale()));</span>
+			}
+		}
+<span class="fc" id="L91">		Optional&lt;LosConfigDetails&gt; entityRelationConfigDetails = configLookupRepository</span>
+<span class="fc" id="L92">				.findById(getRelationId(entityRelationshipType));</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">		if ((entityRelationConfigDetails.isPresent() &amp;&amp; !entityRelationConfigDetails.get().getConfigtypeCode()</span>
+<span class="pc bpc" id="L94" title="1 of 4 branches missed.">				.equals(LOSEntityConstants.ENTITY_RELATION_TYPE_CODE)) || !entityRelationConfigDetails.isPresent()) {</span>
+<span class="fc" id="L95">			throw new BadRequestException(</span>
+<span class="fc" id="L96">					errorMsgs.getMessage(INVALID_RELATION_TYPE_ID, null, CommonUtils.getLocale()));</span>
+		}
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">		if (entityRelationshipType.getOwnership() == null) {</span>
+<span class="fc" id="L99">			throw new BadRequestException(</span>
+<span class="fc" id="L100">					errorMsgs.getMessage(INVALID_RELATION_OWNERSHIP, null, CommonUtils.getLocale()));</span>
+		}
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (entityId1.equals(entityRelationshipType.getEntityId2())) {</span>
+<span class="nc" id="L103">			throw new BadRequestException(errorMsgs.getMessage(ENTITY_ID_FOUND_SAME, null, CommonUtils.getLocale()));</span>
+		}
+
+<span class="nc" id="L106">		List&lt;ChildEntityNode&gt; childEntityNode = childEntityNodeRepository.findEntityTreeData(entityId1);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if (!childEntityNode.isEmpty()) {</span>
+<span class="nc" id="L108">			entityRelationshipTreeServiceImpl.validateTree(childEntityNode, entityId1,</span>
+<span class="nc" id="L109">					entityRelationshipType.getEntityId2());</span>
+		}
+<span class="nc" id="L111">		validateEntityRelationCombination(entityId1, entityRelationshipType);</span>
+<span class="nc" id="L112">		validateEntityReverseRelationCombination(entityId1, entityRelationshipType);</span>
+<span class="nc" id="L113">	}</span>
+
+	public void validateEntityReverseRelationCombination(String entityId1,
+			EntityRelationshipType entityRelationshipType) {
+<span class="fc" id="L117">		EntityRelationshipType existingCombinationE1E2 = entityRelationshipTypeRepository</span>
+<span class="fc" id="L118">				.findByEntityId1AndEntityId2AndDeleted(entityId1, entityRelationshipType.getEntityId2(), false);</span>
+<span class="fc" id="L119">		EntityRelationshipType existingCombinationE2E1 = entityRelationshipTypeRepository</span>
+<span class="fc" id="L120">				.findByEntityId2AndEntityId1AndDeleted(entityId1, entityRelationshipType.getEntityId2(), false);</span>
+<span class="pc bpc" id="L121" title="1 of 6 branches missed.">		if ((existingCombinationE1E2 != null &amp;&amp; (existingCombinationE1E2.isStatus() == Boolean.TRUE))</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">				|| (existingCombinationE2E1 != null) &amp;&amp; (existingCombinationE2E1.isStatus() == Boolean.TRUE)) {</span>
+<span class="fc" id="L123">			throw new BadRequestException(errorMsgs.getMessage(ENTITY_RELATION_EXIST,</span>
+<span class="fc" id="L124">					new Object[] { entityId1, entityRelationshipType.getEntityId2() }, CommonUtils.getLocale()));</span>
+<span class="pc bpc" id="L125" title="2 of 6 branches missed.">		} else if ((existingCombinationE1E2 != null &amp;&amp; (existingCombinationE1E2.isStatus() == Boolean.FALSE))</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">				|| (existingCombinationE2E1 != null) &amp;&amp; (existingCombinationE2E1.isStatus() == Boolean.FALSE)) {</span>
+<span class="fc" id="L127">			throw new BadRequestException(errorMsgs.getMessage(ENTITY_RELATION_STATUS_FALSE_EXIST,</span>
+<span class="fc" id="L128">					new Object[] { entityId1, entityRelationshipType.getEntityId2() }, CommonUtils.getLocale()));</span>
+		}
+<span class="fc" id="L130">	}</span>
+
+	/**
+	 * Method to validate EntityRelationCombinations
+	 * 
+	 * @param entityId1
+	 * @param entityRelationshipType
+	 */
+	public void validateEntityRelationCombination(String entityId1, EntityRelationshipType entityRelationshipType) {
+<span class="fc" id="L139">		String entityId2 = entityRelationshipType.getEntityId2();</span>
+<span class="fc" id="L140">		Long relationId = getRelationId(entityRelationshipType);</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">		if ((entityId1.endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">				&amp;&amp; entityId2.endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="fc bfc" id="L143" title="All 4 branches covered.">				&amp;&amp; relationId.equals(LOSEntityConstants.AFFILIATED) &amp;&amp; entityId1.equals(entityId2))</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">				|| (entityId1.endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">						&amp;&amp; entityId2.endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">						&amp;&amp; relationId.equals(LOSEntityConstants.SUBSIDIARY)</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">						|| relationId.equals(LOSEntityConstants.OWNER))</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">				|| (entityId1.endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">						&amp;&amp; entityId2.endsWith(LOSEntityConstants.INDIVIDUAL_SUFFIX_CODE)</span>
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">						&amp;&amp; relationId.equals(LOSEntityConstants.OWNER))</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">				|| (entityId1.endsWith(LOSEntityConstants.INDIVIDUAL_SUFFIX_CODE)</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">						&amp;&amp; entityId2.endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">						&amp;&amp; relationId.equals(LOSEntityConstants.OWNED))) {</span>
+<span class="fc" id="L154">			validateHundredPercentOwnership(entityRelationshipType.getOwnership());</span>
+<span class="fc" id="L155">			LOG.debug(&quot;OWNER/OWNED , OWNER/SUBSIDIARY Vice versa - entity realtion&quot;);</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">		} else if (entityId1.endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">				&amp;&amp; entityId2.endsWith(LOSEntityConstants.COMMERCIAL_SUFFIX_CODE)</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">				&amp;&amp; relationId.equals(LOSEntityConstants.AFFILIATED)) {</span>
+<span class="fc" id="L159">			validateEntityRelationCombinationsOwnership(entityRelationshipType.getOwnership());</span>
+<span class="fc" id="L160">			LOG.debug(&quot;AFFILIATED/SUBSIDIARY entity realtion&quot;);</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">		} else if (entityId1.endsWith(LOSEntityConstants.INDIVIDUAL_SUFFIX_CODE)</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">				&amp;&amp; entityRelationshipType.getEntityId2().endsWith(LOSEntityConstants.INDIVIDUAL_SUFFIX_CODE)</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">				&amp;&amp; getRelationId(entityRelationshipType).equals(LOSEntityConstants.SPOUSE)) {</span>
+<span class="nc" id="L164">			validateEntityRelationCombinationsOwnership(entityRelationshipType.getOwnership());</span>
+<span class="nc" id="L165">			LOG.debug(&quot;SPOUSE entity realtion&quot;);</span>
+		} else {
+<span class="fc" id="L167">			throw new BadRequestException(</span>
+<span class="fc" id="L168">					errorMsgs.getMessage(ENTITY_RELATION_NOT_ALLOWED, null, CommonUtils.getLocale()));</span>
+		}
+<span class="fc" id="L170">	}</span>
+
+	/**
+	 * Method to return Relation Id
+	 * 
+	 * @param entityRelationshipType
+	 * @return relationId
+	 */
+	private Long getRelationId(EntityRelationshipType entityRelationshipType) {
+<span class="fc" id="L179">		return entityRelationshipType.getEntityRelationConfigDetail().getConfigId();</span>
+	}
+
+	/**
+	 * Method to validate EntityRelationCombinations Ownership cannot be greater
+	 * than 100 or lesser than 0, and not equal to null
+	 * 
+	 * @param ownership
+	 */
+	private void validateHundredPercentOwnership(Double ownership) {
+<span class="fc bfc" id="L189" title="All 6 branches covered.">		if (ownership == null || ownership &gt; 100 || ownership &lt; 0) {</span>
+<span class="fc" id="L190">			throw new BadRequestException(</span>
+<span class="fc" id="L191">					errorMsgs.getMessage(ENTITY_RELATIONS_OWNERSHIP_PERCENT, null, CommonUtils.getLocale()));</span>
+		}
+<span class="fc" id="L193">	}</span>
+
+	/**
+	 * Method to validate EntityRelationCombinations Ownership
+	 * 
+	 * @param ownership
+	 */
+	public void validateEntityRelationCombinationsOwnership(Double ownership) {
+<span class="fc bfc" id="L201" title="All 6 branches covered.">		if (ownership == null || ownership &gt; 0 || ownership &lt; 0) {</span>
+<span class="fc" id="L202">			throw new BadRequestException(</span>
+<span class="fc" id="L203">					errorMsgs.getMessage(ENTITY_RELATIONS_OWNERSHIP, null, CommonUtils.getLocale()));</span>
+		}
+<span class="fc" id="L205">	}</span>
+
+	/**
+	 * Method to validate Spouse(Only One Spouse is allowed) if multiple spouse
+	 * throws error
+	 * 
+	 * @param entityRelationshipType
+	 * @param entityId1
+	 */
+	public void isValidSpouseCount(EntityRelationshipType entityRelationshipType, String entityId1) {
+<span class="fc bfc" id="L215" title="All 2 branches covered.">		if (entityId1.endsWith(LOSEntityConstants.INDIVIDUAL_SUFFIX_CODE)</span>
+<span class="fc bfc" id="L216" title="All 2 branches covered.">				&amp;&amp; getRelationId(entityRelationshipType).equals(LOSEntityConstants.SPOUSE)) {</span>
+<span class="fc" id="L217">			int entityId1Column = entityRelationshipTypeRepository.findByEntityId1SpouseCount(entityId1,</span>
+					LOSEntityConstants.SPOUSE);
+<span class="fc" id="L219">			int entityId1Column2 = entityRelationshipTypeRepository</span>
+<span class="fc" id="L220">					.findByEntityId1SpouseCount(entityRelationshipType.getEntityId2(), LOSEntityConstants.SPOUSE);</span>
+<span class="fc" id="L221">			int entityId2Column = entityRelationshipTypeRepository</span>
+<span class="fc" id="L222">					.findByEntityId2SpouseCount(entityRelationshipType.getEntityId2(), LOSEntityConstants.SPOUSE);</span>
+<span class="fc" id="L223">			int entityId2Column2 = entityRelationshipTypeRepository.findByEntityId2SpouseCount(entityId1,</span>
+					LOSEntityConstants.SPOUSE);
+<span class="pc bpc" id="L225" title="2 of 8 branches missed.">			if (entityId1Column &gt;= 1 || entityId2Column &gt;= 1 || entityId1Column2 &gt;= 1 || entityId2Column2 &gt;= 1) {</span>
+<span class="fc" id="L226">				throw new BadRequestException(errorMsgs.getMessage(MULTIPLE_SPOUSE, null, CommonUtils.getLocale()));</span>
+			}
+		}
+<span class="fc" id="L229">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

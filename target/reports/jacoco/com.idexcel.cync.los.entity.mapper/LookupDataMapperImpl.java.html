@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LookupDataMapperImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.mapper</a> &gt; <span class="el_source">LookupDataMapperImpl.java</span></div><h1>LookupDataMapperImpl.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.mapper;
+
+import com.idexcel.cync.los.entity.dto.CountryLookupDto;
+import com.idexcel.cync.los.entity.dto.CountryStateLookupDto;
+import com.idexcel.cync.los.entity.dto.LosConfigDetailsDto;
+import com.idexcel.cync.los.entity.dto.LosConfigTypeDto;
+import com.idexcel.cync.los.entity.dto.StateLookupDto;
+import com.idexcel.cync.los.entity.model.CountryLookup;
+import com.idexcel.cync.los.entity.model.LosConfigDetails;
+import com.idexcel.cync.los.entity.model.LosConfigType;
+import com.idexcel.cync.los.entity.model.StateLookup;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Generated;
+import org.springframework.stereotype.Component;
+
+@Generated(
+    value = &quot;org.mapstruct.ap.MappingProcessor&quot;,
+    comments = &quot;version: 1.3.0.Final, compiler: javac, environment: Java 14.0.2 (Oracle Corporation)&quot;
+)
+@Component
+<span class="nc" id="L22">public class LookupDataMapperImpl implements LookupDataMapper {</span>
+
+    @Override
+    public CountryLookupDto toCountryLookupDto(CountryLookup countryLookup) {
+<span class="nc bnc" id="L26" title="All 2 branches missed.">        if ( countryLookup == null ) {</span>
+<span class="nc" id="L27">            return null;</span>
+        }
+
+<span class="nc" id="L30">        CountryLookupDto countryLookupDto = new CountryLookupDto();</span>
+
+<span class="nc" id="L32">        countryLookupDto.setCountryId( countryLookup.getCountryId() );</span>
+<span class="nc" id="L33">        countryLookupDto.setCountryCode( countryLookup.getCountryCode() );</span>
+<span class="nc" id="L34">        countryLookupDto.setCountryName( countryLookup.getCountryName() );</span>
+
+<span class="nc" id="L36">        return countryLookupDto;</span>
+    }
+
+    @Override
+    public StateLookupDto toStateLookupDto(StateLookup countryLookup) {
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        if ( countryLookup == null ) {</span>
+<span class="nc" id="L42">            return null;</span>
+        }
+
+<span class="nc" id="L45">        StateLookupDto stateLookupDto = new StateLookupDto();</span>
+
+<span class="nc" id="L47">        stateLookupDto.setCountryId( countryLookup.getCountryId() );</span>
+<span class="nc" id="L48">        stateLookupDto.setStateId( countryLookup.getStateId() );</span>
+<span class="nc" id="L49">        stateLookupDto.setStateCode( countryLookup.getStateCode() );</span>
+<span class="nc" id="L50">        stateLookupDto.setStateName( countryLookup.getStateName() );</span>
+
+<span class="nc" id="L52">        return stateLookupDto;</span>
+    }
+
+    @Override
+    public CountryStateLookupDto toCountryStateLookupDto(StateLookup countryLookup) {
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        if ( countryLookup == null ) {</span>
+<span class="nc" id="L58">            return null;</span>
+        }
+
+<span class="nc" id="L61">        CountryStateLookupDto countryStateLookupDto = new CountryStateLookupDto();</span>
+
+<span class="nc" id="L63">        countryStateLookupDto.setCountryCode( countryLookupCountryLookupCountryCode( countryLookup ) );</span>
+<span class="nc" id="L64">        countryStateLookupDto.setCountryName( countryLookupCountryLookupCountryName( countryLookup ) );</span>
+<span class="nc" id="L65">        countryStateLookupDto.setCountryId( countryLookup.getCountryId() );</span>
+<span class="nc" id="L66">        countryStateLookupDto.setStateId( countryLookup.getStateId() );</span>
+<span class="nc" id="L67">        countryStateLookupDto.setStateCode( countryLookup.getStateCode() );</span>
+<span class="nc" id="L68">        countryStateLookupDto.setStateName( countryLookup.getStateName() );</span>
+
+<span class="nc" id="L70">        return countryStateLookupDto;</span>
+    }
+
+    @Override
+    public List&lt;CountryLookupDto&gt; convertToListCountryLookupDto(List&lt;CountryLookup&gt; countryLookup) {
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        if ( countryLookup == null ) {</span>
+<span class="nc" id="L76">            return null;</span>
+        }
+
+<span class="nc" id="L79">        List&lt;CountryLookupDto&gt; list = new ArrayList&lt;CountryLookupDto&gt;( countryLookup.size() );</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        for ( CountryLookup countryLookup1 : countryLookup ) {</span>
+<span class="nc" id="L81">            list.add( toCountryLookupDto( countryLookup1 ) );</span>
+<span class="nc" id="L82">        }</span>
+
+<span class="nc" id="L84">        return list;</span>
+    }
+
+    @Override
+    public List&lt;StateLookupDto&gt; convertToListStateLookupDto(List&lt;StateLookup&gt; stateLookup) {
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if ( stateLookup == null ) {</span>
+<span class="nc" id="L90">            return null;</span>
+        }
+
+<span class="nc" id="L93">        List&lt;StateLookupDto&gt; list = new ArrayList&lt;StateLookupDto&gt;( stateLookup.size() );</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        for ( StateLookup stateLookup1 : stateLookup ) {</span>
+<span class="nc" id="L95">            list.add( toStateLookupDto( stateLookup1 ) );</span>
+<span class="nc" id="L96">        }</span>
+
+<span class="nc" id="L98">        return list;</span>
+    }
+
+    @Override
+    public LosConfigDetailsDto toConfigDetailsDto(LosConfigDetails losConfigDetails) {
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        if ( losConfigDetails == null ) {</span>
+<span class="nc" id="L104">            return null;</span>
+        }
+
+<span class="nc" id="L107">        LosConfigDetailsDto losConfigDetailsDto = new LosConfigDetailsDto();</span>
+
+<span class="nc" id="L109">        losConfigDetailsDto.setConfigId( losConfigDetails.getConfigId() );</span>
+<span class="nc" id="L110">        losConfigDetailsDto.setConfigCode( losConfigDetails.getConfigCode() );</span>
+<span class="nc" id="L111">        losConfigDetailsDto.setConfigtypeId( losConfigDetails.getConfigtypeId() );</span>
+<span class="nc" id="L112">        losConfigDetailsDto.setConfigtypeCode( losConfigDetails.getConfigtypeCode() );</span>
+<span class="nc" id="L113">        losConfigDetailsDto.setConfigValue( losConfigDetails.getConfigValue() );</span>
+
+<span class="nc" id="L115">        return losConfigDetailsDto;</span>
+    }
+
+    @Override
+    public List&lt;LosConfigDetailsDto&gt; toConfigDetailsDto(List&lt;LosConfigDetails&gt; losConfigDetails) {
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        if ( losConfigDetails == null ) {</span>
+<span class="nc" id="L121">            return null;</span>
+        }
+
+<span class="nc" id="L124">        List&lt;LosConfigDetailsDto&gt; list = new ArrayList&lt;LosConfigDetailsDto&gt;( losConfigDetails.size() );</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        for ( LosConfigDetails losConfigDetails1 : losConfigDetails ) {</span>
+<span class="nc" id="L126">            list.add( toConfigDetailsDto( losConfigDetails1 ) );</span>
+<span class="nc" id="L127">        }</span>
+
+<span class="nc" id="L129">        return list;</span>
+    }
+
+    @Override
+    public List&lt;LosConfigTypeDto&gt; toLosConfigTypeDto(List&lt;LosConfigType&gt; configTypeList) {
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        if ( configTypeList == null ) {</span>
+<span class="nc" id="L135">            return null;</span>
+        }
+
+<span class="nc" id="L138">        List&lt;LosConfigTypeDto&gt; list = new ArrayList&lt;LosConfigTypeDto&gt;( configTypeList.size() );</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">        for ( LosConfigType losConfigType : configTypeList ) {</span>
+<span class="nc" id="L140">            list.add( losConfigTypeToLosConfigTypeDto( losConfigType ) );</span>
+<span class="nc" id="L141">        }</span>
+
+<span class="nc" id="L143">        return list;</span>
+    }
+
+    private String countryLookupCountryLookupCountryCode(StateLookup stateLookup) {
+<span class="nc bnc" id="L147" title="All 2 branches missed.">        if ( stateLookup == null ) {</span>
+<span class="nc" id="L148">            return null;</span>
+        }
+<span class="nc" id="L150">        CountryLookup countryLookup = stateLookup.getCountryLookup();</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">        if ( countryLookup == null ) {</span>
+<span class="nc" id="L152">            return null;</span>
+        }
+<span class="nc" id="L154">        String countryCode = countryLookup.getCountryCode();</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">        if ( countryCode == null ) {</span>
+<span class="nc" id="L156">            return null;</span>
+        }
+<span class="nc" id="L158">        return countryCode;</span>
+    }
+
+    private String countryLookupCountryLookupCountryName(StateLookup stateLookup) {
+<span class="nc bnc" id="L162" title="All 2 branches missed.">        if ( stateLookup == null ) {</span>
+<span class="nc" id="L163">            return null;</span>
+        }
+<span class="nc" id="L165">        CountryLookup countryLookup = stateLookup.getCountryLookup();</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">        if ( countryLookup == null ) {</span>
+<span class="nc" id="L167">            return null;</span>
+        }
+<span class="nc" id="L169">        String countryName = countryLookup.getCountryName();</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">        if ( countryName == null ) {</span>
+<span class="nc" id="L171">            return null;</span>
+        }
+<span class="nc" id="L173">        return countryName;</span>
+    }
+
+    protected LosConfigTypeDto losConfigTypeToLosConfigTypeDto(LosConfigType losConfigType) {
+<span class="nc bnc" id="L177" title="All 2 branches missed.">        if ( losConfigType == null ) {</span>
+<span class="nc" id="L178">            return null;</span>
+        }
+
+<span class="nc" id="L181">        LosConfigTypeDto losConfigTypeDto = new LosConfigTypeDto();</span>
+
+<span class="nc" id="L183">        losConfigTypeDto.setConfigTypeId( losConfigType.getConfigTypeId() );</span>
+<span class="nc" id="L184">        losConfigTypeDto.setClientId( losConfigType.getClientId() );</span>
+<span class="nc" id="L185">        losConfigTypeDto.setConfigtypeCode( losConfigType.getConfigtypeCode() );</span>
+<span class="nc" id="L186">        losConfigTypeDto.setConfigtypeName( losConfigType.getConfigtypeName() );</span>
+
+<span class="nc" id="L188">        return losConfigTypeDto;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

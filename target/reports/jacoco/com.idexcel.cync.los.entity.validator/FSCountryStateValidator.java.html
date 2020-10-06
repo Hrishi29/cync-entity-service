@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FSCountryStateValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Cync LOS Entity Service</a> &gt; <a href="index.source.html" class="el_package">com.idexcel.cync.los.entity.validator</a> &gt; <span class="el_source">FSCountryStateValidator.java</span></div><h1>FSCountryStateValidator.java</h1><pre class="source lang-java linenums">package com.idexcel.cync.los.entity.validator;
+
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.INVALID_COUNTRY_ID;
+import static com.idexcel.cync.los.entity.common.constants.ErrorMessageConstants.INVALID_STATE_FOR_COUNTRYID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Service;
+
+import com.idexcel.cync.los.entity.common.utils.ActivityLog;
+import com.idexcel.cync.los.entity.common.utils.CommonUtils;
+import com.idexcel.cync.los.entity.common.utils.Operation;
+import com.idexcel.cync.los.entity.common.utils.Status;
+import com.idexcel.cync.los.entity.dao.CountryLookupRepository;
+import com.idexcel.cync.los.entity.dao.StateLookupRepository;
+import com.idexcel.cync.los.entity.exception.BadRequestException;
+import com.idexcel.cync.los.entity.model.CountryLookup;
+import com.idexcel.cync.los.entity.model.FinancialEntity;
+import com.idexcel.cync.los.entity.model.StateLookup;
+
+@Service
+public class FSCountryStateValidator {
+
+<span class="fc" id="L26">	private static final Logger LOG = LoggerFactory.getLogger(FSCountryStateValidator.class);</span>
+
+	private CountryLookupRepository countryLookupRepository;
+	private StateLookupRepository stateLookupRepository;
+	private final MessageSource errorMsgs;
+
+	@Autowired
+	public FSCountryStateValidator(CountryLookupRepository countryLookupRepository,
+<span class="fc" id="L34">			StateLookupRepository stateLookupRepository, MessageSource errorMsgs) {</span>
+<span class="fc" id="L35">		this.countryLookupRepository = countryLookupRepository;</span>
+<span class="fc" id="L36">		this.stateLookupRepository = stateLookupRepository;</span>
+<span class="fc" id="L37">		this.errorMsgs = errorMsgs;</span>
+<span class="fc" id="L38">	}</span>
+
+	/**
+	 * Method to Validate Country &amp; State
+	 * 
+	 * @param entity
+	 */
+	public void isCountryStateNullOrNot(FinancialEntity entity) {
+<span class="fc" id="L46">		CountryLookup countryObj = entity.getCountry();</span>
+<span class="fc" id="L47">		StateLookup stateObj = entity.getState();</span>
+		// Condition to Validate CID Null SID null
+<span class="fc bfc" id="L49" title="All 6 branches covered.">		if ((countryObj == null || entity.getCountry().getCountryId() == null)</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">				&amp;&amp; (stateObj == null || entity.getState().getStateId() == null)) {</span>
+<span class="fc" id="L51">			entity.setCountry(null);</span>
+<span class="fc" id="L52">			entity.setState(null);</span>
+		}
+		// Condition to Validate CID Null SID NotNull
+<span class="pc bpc" id="L55" title="1 of 4 branches missed.">		else if ((entity.getCountry().getCountryId() == null) &amp;&amp; (entity.getState().getStateId() != null)) {</span>
+<span class="fc" id="L56">			throw new BadRequestException(&quot;Please Selcet Country to Select State&quot;);</span>
+		}
+		// Condition to Validate (CID NotNull) &amp; setCID Null
+<span class="pc bpc" id="L59" title="1 of 4 branches missed.">		else if ((entity.getCountry().getCountryId() != null)</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">				&amp;&amp; (stateObj == null || entity.getState().getStateId() == null)) {</span>
+<span class="fc" id="L61">			isValidCountryId(entity.getCountry().getCountryId());</span>
+<span class="fc" id="L62">			entity.setState(null);</span>
+		}
+		// Condition to Validate (CID NotNull) and SID(NotNull)
+<span class="pc bpc" id="L65" title="2 of 4 branches missed.">		else if ((entity.getCountry().getCountryId() != null) &amp;&amp; (entity.getState().getStateId() != null)) {</span>
+<span class="fc" id="L66">			isValidCountryId(entity.getCountry().getCountryId());</span>
+<span class="fc" id="L67">			isValidStateId(entity);</span>
+		}
+<span class="fc" id="L69">	}</span>
+
+	public void isValidStateId(FinancialEntity entity) {
+<span class="fc" id="L72">		StateLookup state = stateLookupRepository.findByStateIdAndCountryId(entity.getState().getStateId(),</span>
+<span class="fc" id="L73">				entity.getCountry().getCountryId());</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">		if (state == null) {</span>
+<span class="fc" id="L75">			LOG.info(ActivityLog.getActivityLog(null, Operation.INSERT_OR_UPDATE, null,</span>
+<span class="fc" id="L76">					&quot;Entered Invalid State to the Country&quot;, Status.ERROR, null, ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L77">			throw new BadRequestException(</span>
+					errorMsgs
+<span class="fc" id="L79">							.getMessage(INVALID_STATE_FOR_COUNTRYID,</span>
+<span class="fc" id="L80">									new Object[] { String.valueOf(entity.getState().getStateId()),</span>
+<span class="fc" id="L81">											String.valueOf(entity.getCountry().getCountryId()) },</span>
+<span class="fc" id="L82">									CommonUtils.getLocale()));</span>
+		}
+<span class="fc" id="L84">	}</span>
+
+	/**
+	 * Method to Validate countryId
+	 * 
+	 * @param countryId
+	 */
+	public void isValidCountryId(Long countryId) {
+<span class="fc" id="L92">		CountryLookup country = countryLookupRepository.findByCountryId(countryId);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">		if (country == null) {</span>
+<span class="fc" id="L94">			LOG.info(ActivityLog.getActivityLog(null, Operation.INSERT_OR_UPDATE, null,</span>
+<span class="fc" id="L95">					&quot;Entered Invalid CountryId&quot;, Status.ERROR, null, ActivityLog.localDateTimeInUTC()));</span>
+<span class="fc" id="L96">			throw new BadRequestException(errorMsgs.getMessage(INVALID_COUNTRY_ID,</span>
+<span class="fc" id="L97">					new Object[] { String.valueOf(countryId) }, CommonUtils.getLocale()));</span>
+		}
+<span class="fc" id="L99">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

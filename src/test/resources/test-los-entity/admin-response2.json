@@ -1,0 +1,25 @@
+[
+   {
+        "id": 554,
+        "email": "borkster@bork.com",
+        "firstName": "Bork",
+        "lastName": "Binkerson",
+        "middleName": null,
+        "phone": null,
+        "supervisor": null,
+        "department": null,
+        "licenseType": null,
+        "isActive": false,
+        "position": null,
+        "createdBy": "admin@xyz.com",
+        "modifiedBy": "admin@xyz.com",
+        "createdAt": "2020-02-03T16:06:24Z",
+        "modifiedAt": "2020-02-03T16:06:24Z",
+        "role": {
+            "id": 393,
+            "name": "Bergarosomous Rex1",
+            "isBase": false,
+            "baseRole": "Credit Analyst"
+        }
+    }
+]
